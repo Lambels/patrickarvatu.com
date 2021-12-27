@@ -17,6 +17,8 @@ type User struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 
 	Auths []*Auth `json:"auths"`
+
+	IsAdmin bool `json:"isAdmin"`
 }
 
 func (u *User) Validate() error {
@@ -28,7 +30,7 @@ func (u *User) Validate() error {
 
 func (u *User) AvatarURL(size int) string {
 	for _, auth := range u.Auths {
-		if s := auth.AvatarURL(size); s != nil {
+		if s := auth.AvatarURL(size); s != "" {
 			return s
 		}
 	}
@@ -39,7 +41,7 @@ func (u *User) AvatarURL(size int) string {
 type UserService interface {
 	FindUserByID(ctx context.Context, id int) (*User, error)
 
-	FindUsers(ctx context.Context, filter UserFilter) ([]*User, error)
+	FindUsers(ctx context.Context, filter UserFilter) ([]*User, int, error)
 
 	CreateUser(ctx context.Context, user *User) error
 
