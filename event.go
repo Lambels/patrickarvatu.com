@@ -1,21 +1,19 @@
 package pa
 
+import "github.com/hibiken/asynq"
+
 // event topics
 const (
-	EventTopicNewBlog    = "blog:new"
-	EventTopicNewSubBlog = "blog:new:sub_blog"
-	EventTopicNewComment = "blog:new:comment"
+	EventTopicNewBlog = "blog:new"
+
+	// Sub blogs are branched under blogs
+	EventTopicNewSubBlog = "blog:sub_blog:new"
+
+	// Comments are branched under sub blogs
+	EventTopicNewComment = "blog:sub_blog:comment:new"
 )
 
-type EventHandler func(event Event) Error
-
 type Payload interface{}
-
-type Event struct {
-	Topic string
-
-	Payload []byte
-}
 
 type NewBlogPayload struct {
 	Blog *Blog
@@ -26,7 +24,15 @@ type NewSubBlog struct {
 }
 
 type EventService interface {
-	Push(topic string, payload Payload)
+	Push(topic string, payload Payload) error
 
-	Subscribe(topic string, handler EventHandler)
+	RegisterHandler(topic string, handler asynq.HandlerFunc)
 }
+
+type NOPEventService struct{}
+
+func (n *NOPEventService) Push(topic string, payload Payload) error
+
+func (n *NOPEventService) RegisterHandler(topic string, handler asynq.HandlerFunc)
+
+func NewNOPEventService() EventService { return &NOPEventService{} }
