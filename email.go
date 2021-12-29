@@ -1,5 +1,5 @@
 package pa
 
 type EmailService interface {
-	SendEmail(addr []byte, body, subject string) error
+	SendEmail(to []string, body, subject string) error
 }
