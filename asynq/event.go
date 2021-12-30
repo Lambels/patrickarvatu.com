@@ -1,6 +1,7 @@
 package asynq
 
 import (
+	"context"
 	"encoding/json"
 
 	pa "github.com/Lambels/patrickarvatu.com"
@@ -24,7 +25,8 @@ func NewEventService(redisDSN string) *EventService {
 
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{
-			Addr: redisDSN,
+			Addr:     redisDSN,
+			Password: "",
 		},
 		asynq.Config{
 			Concurrency: 10,
@@ -35,7 +37,8 @@ func NewEventService(redisDSN string) *EventService {
 
 	client := asynq.NewClient(
 		asynq.RedisClientOpt{
-			Addr: redisDSN,
+			Addr:     redisDSN,
+			Password: "",
 		},
 	)
 
@@ -53,9 +56,9 @@ func (e *EventService) Close() error {
 	return e.client.Close()
 }
 
-func (e *EventService) Push(topic string, payload pa.Payload) error {
-	if jsonPayload, err := json.Marshal(payload); err == nil {
-		_, err := e.client.Enqueue(asynq.NewTask(topic, jsonPayload))
+func (e *EventService) Push(ctx context.Context, event pa.Event) error {
+	if jsonPayload, err := json.Marshal(event.Payload); err == nil {
+		_, err := e.client.EnqueueContext(ctx, asynq.NewTask(event.Topic, jsonPayload))
 		return err
 	} else {
 		return err
@@ -63,6 +66,14 @@ func (e *EventService) Push(topic string, payload pa.Payload) error {
 }
 
 // Register all handlers before opening the server
-func (e *EventService) RegisterHandler(topic string, handler asynq.HandlerFunc) {
-	e.mux.HandleFunc(topic, handler)
+func (e *EventService) RegisterHandler(topic string, handler pa.EventHandler) {
+	e.mux.HandleFunc(topic, func(ctx context.Context, t *asynq.Task) error {
+		return handler(
+			ctx,
+			pa.Event{
+				Topic:   topic,
+				Payload: t.Payload(),
+			},
+		)
+	})
 }
