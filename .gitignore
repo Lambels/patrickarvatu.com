@@ -2,3 +2,4 @@
 *.exe
 *.conf
 *.db
+dump.rdb
