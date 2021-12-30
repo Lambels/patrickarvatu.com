@@ -28,9 +28,6 @@ func TestEventService(t *testing.T) {
 	})
 
 	t.Run("Pushing Event", func(t *testing.T) {
-		ctx := context.Background()
-		userCtx := pa.NewContextWithUser(ctx, &pa.User{ID: 123})
-
 		event := pa.Event{
 			Topic: pa.EventTopicNewBlog,
 			Payload: pa.BlogPayload{
@@ -41,7 +38,7 @@ func TestEventService(t *testing.T) {
 		}
 
 		t.Log("Pushing event")
-		if err := s.Push(userCtx, event); err != nil {
+		if err := s.Push(context.Background(), event); err != nil {
 			t.Fatal(err)
 		}
 	})
