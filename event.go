@@ -1,6 +1,8 @@
 package pa
 
-import "github.com/hibiken/asynq"
+import (
+	"context"
+)
 
 // event topics
 const (
@@ -13,26 +15,38 @@ const (
 	EventTopicNewComment = "blog:sub_blog:comment:new"
 )
 
+type EventHandler func(ctx context.Context, event Event) error
+
 type Payload interface{}
 
-type NewBlogPayload struct {
+type Event struct {
+	Topic string
+
+	Payload Payload
+}
+
+type BlogPayload struct {
 	Blog *Blog
 }
 
-type NewSubBlog struct {
+type SubBlogPayload struct {
 	SubBlog *SubBlog
 }
 
-type EventService interface {
-	Push(topic string, payload Payload) error
+type CommentPayload struct {
+	Comment *Comment
+}
 
-	RegisterHandler(topic string, handler asynq.HandlerFunc)
+type EventService interface {
+	Push(ctx context.Context, event Event) error
+
+	RegisterHandler(topic string, handler EventHandler)
 }
 
 type NOPEventService struct{}
 
-func (n *NOPEventService) Push(topic string, payload Payload) error
+func (n *NOPEventService) Push(ctx context.Context, event Event) error { panic("Not implemented") }
 
-func (n *NOPEventService) RegisterHandler(topic string, handler asynq.HandlerFunc)
+func (n *NOPEventService) RegisterHandler(topic string, handler EventHandler) {}
 
 func NewNOPEventService() EventService { return &NOPEventService{} }
