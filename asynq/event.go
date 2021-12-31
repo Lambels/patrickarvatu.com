@@ -14,6 +14,8 @@ type EventService struct {
 	worker *asynq.Server
 	mux    *asynq.ServeMux
 	client *asynq.Client
+
+	hand pa.SubscriptionService
 }
 
 func NewEventService(redisDSN string) *EventService {
@@ -70,10 +72,15 @@ func (e *EventService) RegisterHandler(topic string, handler pa.EventHandler) {
 	e.mux.HandleFunc(topic, func(ctx context.Context, t *asynq.Task) error {
 		return handler(
 			ctx,
+			e.hand,
 			pa.Event{
 				Topic:   topic,
 				Payload: t.Payload(),
 			},
 		)
 	})
+}
+
+func (e *EventService) RegisterSubscriptionsHandler(hand pa.SubscriptionService) {
+	e.hand = hand
 }
