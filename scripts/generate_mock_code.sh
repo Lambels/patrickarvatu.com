@@ -1,0 +1,1 @@
+mockery --case=underscore --outpkg=mock --output=mock --all
