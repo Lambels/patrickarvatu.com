@@ -14,9 +14,13 @@ func TestEventService(t *testing.T) {
 	defer s.Close()
 	go s.Open()
 
+	t.Run("Register Subscription Handler", func(t *testing.T) {
+		s.RegisterSubscriptionsHandler(nil)
+	})
+
 	t.Run("Register Handlers", func(t *testing.T) {
-		t.Log("Registering handler")
-		s.RegisterHandler(pa.EventTopicNewBlog, func(ctx context.Context, event pa.Event) error {
+		// Wont use ctx and hand for tests
+		s.RegisterHandler(pa.EventTopicNewBlog, func(ctx context.Context, hand pa.SubscriptionService, event pa.Event) error {
 			payload := new(pa.BlogPayload)
 			if err := json.Unmarshal(event.Payload.([]byte), payload); err != nil {
 				t.Fatal(err)
@@ -37,7 +41,6 @@ func TestEventService(t *testing.T) {
 			},
 		}
 
-		t.Log("Pushing event")
 		if err := s.Push(context.Background(), event); err != nil {
 			t.Fatal(err)
 		}
