@@ -15,7 +15,7 @@ const (
 	EventTopicNewComment = "blog:sub_blog:comment:new"
 )
 
-type EventHandler func(ctx context.Context, event Event) error
+type EventHandler func(ctx context.Context, handler SubscriptionService, event Event) error
 
 type Payload interface{}
 
@@ -37,10 +37,13 @@ type CommentPayload struct {
 	Comment *Comment
 }
 
+// EventService represents a service which manages auth in the system.
 type EventService interface {
 	Push(ctx context.Context, event Event) error
 
 	RegisterHandler(topic string, handler EventHandler)
+
+	RegisterSubscriptionsHandler(hand SubscriptionService)
 }
 
 type NOPEventService struct{}
@@ -48,5 +51,7 @@ type NOPEventService struct{}
 func (n *NOPEventService) Push(ctx context.Context, event Event) error { panic("Not implemented") }
 
 func (n *NOPEventService) RegisterHandler(topic string, handler EventHandler) {}
+
+func (n *NOPEventService) RegisterSubscriptionsHandler(hand SubscriptionService) {}
 
 func NewNOPEventService() EventService { return &NOPEventService{} }
