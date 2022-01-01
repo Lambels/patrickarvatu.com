@@ -38,6 +38,7 @@ func (u *User) AvatarURL(size int) string {
 	return ""
 }
 
+// UserService represents a service which manages auth in the system.
 type UserService interface {
 	FindUserByID(ctx context.Context, id int) (*User, error)
 
@@ -45,7 +46,7 @@ type UserService interface {
 
 	CreateUser(ctx context.Context, user *User) error
 
-	UpdateUser(ctx context.Context, update UserUpdate) (*User, error)
+	UpdateUser(ctx context.Context, id int, update UserUpdate) (*User, error)
 
 	DeleteUser(ctx context.Context, id int) error
 }

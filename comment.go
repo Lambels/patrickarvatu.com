@@ -24,6 +24,7 @@ func (c *Comment) Validate() error {
 	return nil
 }
 
+// CommentService represents a service which manages auth in the system.
 type CommentService interface {
 	FindCommentByID(ctx context.Context, id int) (*Comment, error)
 
@@ -32,7 +33,7 @@ type CommentService interface {
 	CreateComment(ctx context.Context, blog *Comment) error
 
 	// under admin control
-	UpdateComment(ctx context.Context, update CommentUpdate) (*Comment, error)
+	UpdateComment(ctx context.Context, id int, update CommentUpdate) (*Comment, error)
 
 	DeleteComment(ctx context.Context, id int) error
 }
