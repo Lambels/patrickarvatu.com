@@ -77,7 +77,7 @@ type AuthService interface {
 	// linked to the user and the user linked to the auth through the linking fields.
 	CreateAuth(ctx context.Context, auth *Auth) error
 
-	// DeleteAuth permanently deletes a subscription. The linked user wont be deleted bu will appear as
+	// DeleteAuth permanently deletes a auth. The linked user wont be deleted bu will appear as
 	// not validated.
 	DeleteAuth(ctx context.Context, id int) error
 }
