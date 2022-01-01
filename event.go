@@ -6,8 +6,6 @@ import (
 
 // event topics
 const (
-	EventTopicNewBlog = "blog:new"
-
 	// Sub blogs are branched under blogs
 	EventTopicNewSubBlog = "blog:sub_blog:new"
 
