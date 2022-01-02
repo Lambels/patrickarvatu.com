@@ -78,7 +78,7 @@ func findSubscriptions(ctx context.Context, tx *Tx, filter pa.SubscriptionFilter
 		// pa.EventTopicNewSubBlog.
 		subs, n, err = findBlogSubscriptions(ctx, tx, filter)
 		if err != nil {
-			return nil, 0, err
+			return subs, n, err
 		}
 
 	case pa.EventTopicNewComment:
@@ -87,7 +87,7 @@ func findSubscriptions(ctx context.Context, tx *Tx, filter pa.SubscriptionFilter
 		// pa.EventTopicNewComment.
 		subs, n, err = findSubBlogSubscriptions(ctx, tx, filter)
 		if err != nil {
-			return nil, 0, err
+			return subs, n, err
 		}
 
 	default:
