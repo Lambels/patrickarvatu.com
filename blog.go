@@ -7,7 +7,7 @@ import (
 
 // Blog represents an blog object in the system.
 // Blog has no reason to store any user ID as the admin user is the only one
-// who can interact with the BlogService
+// who can interact with BlogService.CreateBlog().
 type Blog struct {
 	// the pk of the blog.
 	ID int `json:"id"`
@@ -32,7 +32,6 @@ func (b *Blog) Validate() error {
 }
 
 // BlogService represents a service which manages auth in the system.
-// returns EUNAUTHORIZED if used by anyone other then the adim user.
 type BlogService interface {
 	// FindBlogByID returns a blog based on the id.
 	// returns ENOTFOUND if the blog doesent exist.
@@ -43,14 +42,17 @@ type BlogService interface {
 	FindBlogs(ctx context.Context, filter BlogFilter) ([]*Blog, int, error)
 
 	// CreateBlog creates a blog.
+	// returns EUNAUTHORIZED if used by anyone other then the adim user.
 	CreateBlog(ctx context.Context, blog *Blog) error
 
 	// UpdateBlog updates a blog based on the update field.
 	// returns ENOTFOUND if blog doesent exist.
+	// returns EUNAUTHORIZED if used by anyone other then the adim user.
 	UpdateBlog(ctx context.Context, id int, update BlogUpdate) (*Blog, error)
 
 	// DeleteBlog permanently deletes a blog.
 	// returns ENOTFOUND if blog doesent exist.
+	// returns EUNAUTHORIZED if used by anyone other then the adim user.
 	DeleteBlog(ctx context.Context, id int) error
 }
 
