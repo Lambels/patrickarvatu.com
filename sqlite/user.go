@@ -40,7 +40,7 @@ func (s *UserService) FindUserByID(ctx context.Context, id int) (*pa.User, error
 	return user, nil
 }
 
-// FindUser returns a range of user based on filter.
+// FindUsers returns a range of user based on filter.
 func (s *UserService) FindUsers(ctx context.Context, filter pa.UserFilter) ([]*pa.User, int, error) {
 	tx, err := s.db.BeginTX(ctx, nil)
 	if err != nil {
