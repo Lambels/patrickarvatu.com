@@ -46,7 +46,7 @@ var (
 	})
 )
 
-// migration fs ./migration/*.sql
+//go:embed migration/*.sql
 var migrationFS embed.FS
 
 type DB struct {
