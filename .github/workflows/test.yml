@@ -1,9 +1,6 @@
 name: Go Test & Build
 
-on:
-  push:
-    tags:
-      - '*'
+on: [workflow_dispatch]
 
 jobs:
   test:
