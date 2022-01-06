@@ -21,12 +21,12 @@ func TestEventService(t *testing.T) {
 	t.Run("Register Handlers", func(t *testing.T) {
 		// Wont use ctx and hand for tests
 		s.RegisterHandler(pa.EventTopicNewSubBlog, func(ctx context.Context, hand pa.SubscriptionService, event pa.Event) error {
-			payload := new(pa.BlogPayload)
+			payload := new(pa.SubBlogPayload)
 			if err := json.Unmarshal(event.Payload.([]byte), payload); err != nil {
 				t.Fatal(err)
 			}
 
-			t.Logf("Payload: %v", payload.Blog.ID)
+			t.Logf("Payload: %v", payload.SubBlog.ID)
 			return nil
 		})
 	})
@@ -34,8 +34,8 @@ func TestEventService(t *testing.T) {
 	t.Run("Pushing Event", func(t *testing.T) {
 		event := pa.Event{
 			Topic: pa.EventTopicNewSubBlog,
-			Payload: pa.BlogPayload{
-				Blog: &pa.Blog{
+			Payload: pa.SubBlogPayload{
+				SubBlog: &pa.SubBlog{
 					ID: 123,
 				},
 			},
