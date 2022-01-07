@@ -245,6 +245,22 @@ func (db *DB) update(ctx context.Context) error {
 	return nil
 }
 
+func (db *DB) publishNewCommentEvent(ctx context.Context, payload pa.CommentPayload) error {
+	event := pa.Event{
+		Topic:   pa.EventTopicNewComment,
+		Payload: payload,
+	}
+	return db.EventService.Push(ctx, event)
+}
+
+func (db *DB) publishNewSubBlogEvent(ctx context.Context, payload pa.SubBlogPayload) error {
+	event := pa.Event{
+		Topic:   pa.EventTopicNewSubBlog,
+		Payload: payload,
+	}
+	return db.EventService.Push(ctx, event)
+}
+
 type NullTime time.Time
 
 func (n *NullTime) Scan(value interface{}) error {
