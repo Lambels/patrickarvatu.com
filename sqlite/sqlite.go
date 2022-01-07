@@ -56,7 +56,7 @@ type DB struct {
 
 	DSN string
 
-	// sqlite package will use events, ie: blog:new, blog:sub_blog:new etc
+	// sqlite package will use events, ie: blog:sub_blog:comment:new, blog:sub_blog:new etc
 	EventService pa.EventService
 
 	Now func() time.Time
@@ -72,7 +72,7 @@ func NewDB(dsn string) *DB {
 	db := &DB{
 		DSN:          dsn,
 		Now:          time.Now,
-		EventService: pa.NewNOPEventService(),
+		EventService: pa.NewNOPEventService(), // usefull for testing when ignoring events. + clean creation, no possible error.
 	}
 
 	return db
