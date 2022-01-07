@@ -1,8 +1,11 @@
-build-backend: redis build-go
-test-backend: redis test-go
+build-backend: generate redis build-go
+test-backend: generate redis test-go
 
 redis:
 	redis-server
+
+generate:
+	go generate ./...
 
 test-go:
 	go test -v ./...
