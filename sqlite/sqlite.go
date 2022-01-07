@@ -233,12 +233,12 @@ func (db *DB) update(ctx context.Context) error {
 	userCountGauge.Set(float64(n))
 
 	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM blog_subscriptions;`).Scan(&n); err != nil {
-		return fmt.Errorf("dial count: %w", err)
+		return fmt.Errorf("blog subscription count: %w", err)
 	}
 	blogSubscriptions := n
 
 	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM sub_blog_subscriptions;`).Scan(&n); err != nil {
-		return fmt.Errorf("dial membership count: %w", err)
+		return fmt.Errorf("sub blog subscrtiption count: %w", err)
 	}
 	subscriptionCountGauge.Set(float64(blogSubscriptions + n))
 
