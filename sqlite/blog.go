@@ -66,7 +66,7 @@ func (s *BlogService) FindBlogs(ctx context.Context, filter pa.BlogFilter) ([]*p
 
 		} else {
 			for _, subBlog := range blog.SubBlogs {
-				if err := attachCommentsToSubBlog(subBlog); err != nil { // attach comments to the sub blogs of each blog.
+				if err := attachCommentsToSubBlog(ctx, tx, subBlog); err != nil { // attach comments to the sub blogs of each blog.
 					return blogs, n, err
 				}
 			}
