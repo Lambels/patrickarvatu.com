@@ -31,13 +31,13 @@ func (s *SubBlog) Validate() error {
 
 // SubBlogService represents a service which manages auth in the system.
 type SubBlogService interface {
-	FindSubBlogByID(ctx context.Context, id int) (*Blog, error)
+	FindSubBlogByID(ctx context.Context, id int) (*SubBlog, error)
 
-	FindSubBlogs(ctx context.Context, filter SubBlogFilter) ([]*Blog, int, error)
+	FindSubBlogs(ctx context.Context, filter SubBlogFilter) ([]*SubBlog, int, error)
 
-	CreateSubBlog(ctx context.Context, blog *SubBlog) error
+	CreateSubBlog(ctx context.Context, subBlog *SubBlog) error
 
-	UpdateSubBlog(ctx context.Context, id int, update SubBlogUpdate) (*Blog, error)
+	UpdateSubBlog(ctx context.Context, id int, update SubBlogUpdate) (*SubBlog, error)
 
 	DeleteSubBlog(ctx context.Context, id int) error
 }
