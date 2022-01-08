@@ -2,7 +2,9 @@ package sqlite
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	pa "github.com/Lambels/patrickarvatu.com"
@@ -139,29 +141,237 @@ func (s *AuthService) DeleteAuth(ctx context.Context, id int) error {
 }
 
 func findAuthByID(ctx context.Context, tx *Tx, id int) (*pa.Auth, error) {
+	filter := pa.AuthFilter{
+		ID: &id,
+	}
 
-}
+	auths, _, err := findAuths(ctx, tx, filter)
+	if err != nil {
+		return nil, err
 
-func findAuths(ctx context.Context, tx *Tx, filter pa.AuthFilter) ([]*pa.Auth, int, error) {
-
+	} else if len(auths) == 0 {
+		return nil, pa.Errorf(pa.ENOTFOUND, "auth not found.")
+	}
+	return auths[0], nil
 }
 
 func findAuthBySourceID(ctx context.Context, tx *Tx, source string, sourceID string) (*pa.Auth, error) {
+	filter := pa.AuthFilter{
+		Source:   &source,
+		SourceID: &sourceID,
+	}
 
+	auths, _, err := findAuths(ctx, tx, filter)
+	if err != nil {
+		return nil, err
+
+	} else if len(auths) == 0 {
+		return nil, pa.Errorf(pa.ENOTFOUND, "auth not found.")
+	}
+	return auths[0], nil
+}
+
+func findAuths(ctx context.Context, tx *Tx, filter pa.AuthFilter) (_ []*pa.Auth, n int, err error) {
+	// build where and args statement method.
+	// not vulnerable to sql injection attack.
+	where, args := []string{"1 = 1"}, []interface{}{}
+
+	if v := filter.ID; v != nil {
+		where = append(where, "id = ?")
+		args = append(args, *v)
+	}
+	if v := filter.UserID; v != nil {
+		where = append(where, "user_id = ?")
+		args = append(args, *v)
+	}
+	if v := filter.Source; v != nil {
+		where = append(where, "source = ?")
+		args = append(args, *v)
+	}
+	if v := filter.SourceID; v != nil {
+		where = append(where, "source_id = ?")
+		args = append(args, *v)
+	}
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT 
+		    id,
+		    user_id,
+		    source,
+		    source_id,
+		    access_token,
+		    refresh_token,
+		    expiry,
+		    created_at,
+		    updated_at,
+		    COUNT(*) OVER()
+		FROM auths
+		WHERE `+strings.Join(where, " AND ")+`
+		ORDER BY id ASC
+		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
+	`,
+		args...,
+	)
+
+	if err != nil {
+		return nil, n, err
+	}
+	defer rows.Close()
+
+	// deserialize rows.
+	auths := []*pa.Auth{}
+	for rows.Next() {
+		var auth *pa.Auth
+		var expiry sql.NullString
+
+		if err := rows.Scan(
+			&auth.ID,
+			&auth.UserID,
+			&auth.Source,
+			&auth.SourceID,
+			&auth.AccessToken,
+			&auth.RefreshToken,
+			&expiry,
+			(*NullTime)(&auth.CreatedAt),
+			(*NullTime)(&auth.UpdatedAt),
+			&n,
+		); err != nil {
+			return nil, 0, err
+		}
+
+		// different providers differ in providing expiry so we validate its existance and attach
+		// it to auth if valid.
+		if expiry.Valid {
+			if v, _ := time.Parse(time.RFC3339, expiry.String); !v.IsZero() {
+				auth.Expiry = &v
+			}
+		}
+
+		auths = append(auths, auth)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return auths, n, nil
 }
 
 func createAuth(ctx context.Context, tx *Tx, auth *pa.Auth) error {
+	auth.CreatedAt = tx.now
+	auth.UpdatedAt = auth.CreatedAt
 
+	if err := auth.Validate(); err != nil {
+		return err
+	}
+
+	var expiry *string
+	if auth.Expiry != nil {
+		v := auth.Expiry.Format(time.RFC3339)
+		expiry = &v
+	}
+
+	result, err := tx.ExecContext(ctx, `
+		INSERT INTO auths (
+			user_id,
+			source,
+		    source_id,
+		    access_token,
+		    refresh_token,
+		    expiry,
+		    created_at,
+		    updated_at,
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`,
+		auth.UserID,
+		auth.Source,
+		auth.SourceID,
+		auth.AccessToken,
+		auth.RefreshToken,
+		expiry,
+		(*NullTime)(&auth.CreatedAt),
+		(*NullTime)(&auth.UpdatedAt),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	// set id from database to auth obj.
+	auth.ID = int(id)
+	return nil
 }
 
+// updateAuth refreshes the auth represented by id with accesToken, refreshToken, expiry.
 func updateAuth(ctx context.Context, tx *Tx, id int, accesToken, refreshToken string, expiry *time.Time) (*pa.Auth, error) {
+	auth, err := findAuthByID(ctx, tx, id) // current auth.
+	if err != nil {
+		return nil, err
+	}
 
+	// refresh auth obj.
+	auth.AccessToken = accesToken
+	auth.RefreshToken = refreshToken
+	auth.Expiry = expiry
+	auth.UpdatedAt = tx.now
+
+	if err := auth.Validate(); err != nil {
+		return nil, err
+	}
+
+	var expiryStringFmt *string
+	if auth.Expiry != nil {
+		v := auth.Expiry.Format(time.RFC3339)
+		expiryStringFmt = &v
+	}
+
+	// update db with new refreshed auth.
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE auths
+		SET access_token 	= ?,
+			refresh_token 	= ?,
+			expiry			= ?,
+			updated_at		= ?,
+		WHERE id = ?
+	`,
+		auth.AccessToken,
+		auth.RefreshToken,
+		expiryStringFmt,
+		(*NullTime)(&auth.UpdatedAt),
+		id,
+	); err != nil {
+		return nil, err
+	}
+
+	return auth, nil
 }
 
 func deleteAuth(ctx context.Context, tx *Tx, id int) error {
+	userID := pa.UserIDFromContext(ctx)
 
+	auth, err := findAuthByID(ctx, tx, id)
+	if err != nil {
+		return err
+	}
+
+	if auth.UserID != userID {
+		return pa.Errorf(pa.EUNAUTHORIZED, "cannot delete someone else's auth.")
+	}
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM auths WHERE id = ?`, id); err != nil {
+		return err
+	}
+	return nil
 }
 
-func attachUserToAuth(ctx context.Context, tx *Tx, auth *pa.Auth) error {
-
+func attachUserToAuth(ctx context.Context, tx *Tx, auth *pa.Auth) (err error) {
+	if auth.User, err = findUserByID(ctx, tx, auth.UserID); err != nil {
+		return fmt.Errorf("attachUserToAuth: %w", err)
+	}
+	return nil
 }
