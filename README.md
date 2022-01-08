@@ -1,4 +1,4 @@
-# patrickarvatu.com
+# patrickarvatu.com [![Version](https://img.shields.io/badge/goversion-1.17.x-blue.svg)](https://golang.org) ![Go Backend Test](https://github.com/Lambels/patrickarvatu.com/workflows/Go%20Test%20&%20Build/badge.svg)
 patrickarvatu.com is my open source personal website!
 
 # State
