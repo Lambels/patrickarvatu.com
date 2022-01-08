@@ -27,3 +27,8 @@ func UserIDFromContext(ctx context.Context) int {
 	}
 	return 0
 }
+
+// IsAdminContext is a helper function to check if context: ctx is an admin context.
+func IsAdminContext(ctx context.Context) bool {
+	return ctx.Value(userContextKey).(*User).IsAdmin
+}
