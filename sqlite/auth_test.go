@@ -40,11 +40,36 @@ func TestCreateAuth(t *testing.T) {
 			t.Fatal("got id = 0")
 		}
 
-		// assert creation
+		// assert creation.
 		if gotAuth, err := authService.FindAuthByID(backgroundCtx, 1); err != nil {
 			t.Fatal(err)
 		} else if !reflect.DeepEqual(auth, gotAuth) {
 			t.Fatal("DeepEqual: auth != gotAuth")
 		}
 	})
+
+	t.Run("User Not Found", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		authService := sqlite.NewAuthService(db)
+
+		time := time.Date(2022, time.January, 8, 0, 0, 0, 0, time.UTC)
+		auth := &pa.Auth{
+			UserID:       1, // provide uID indicating that we want to update auth on uID 1 which doesent exist.
+			Source:       "cool-source",
+			SourceID:     "cooler-source-id",
+			RefreshToken: "my-secret-token",
+			AccessToken:  "my-very-secret-token",
+			Expiry:       &time,
+		}
+
+		if err := authService.CreateAuth(backgroundCtx, auth); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != pa.ENOTFOUND")
+		}
+	})
+
+	// TODO: add ok update auth test.
 }
