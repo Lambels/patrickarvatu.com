@@ -38,6 +38,16 @@ func TestCreateAuth(t *testing.T) {
 			t.Fatal(err)
 		} else if auth.ID == 0 {
 			t.Fatal("got id = 0")
+		} else if auth.UserID == 0 {
+			t.Fatal("expected user creation")
+		} else if auth.User.CreatedAt.IsZero() {
+			t.Fatal("expected user time stamp creation (created AT)")
+		} else if auth.User.UpdatedAt.IsZero() {
+			t.Fatal("expected user time stamp creation (updated AT)")
+		} else if auth.CreatedAt.IsZero() {
+			t.Fatal("expected auth time stamp creation (created AT)")
+		} else if auth.UpdatedAt.IsZero() {
+			t.Fatal("expected auth time stamp creation (updated AT)")
 		}
 
 		// assert creation.
@@ -73,3 +83,5 @@ func TestCreateAuth(t *testing.T) {
 
 	// TODO: add ok update auth test.
 }
+
+// TODO: add testing for all CRUD functions.
