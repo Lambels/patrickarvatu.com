@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	pa "github.com/Lambels/patrickarvatu.com"
 )
@@ -99,11 +100,146 @@ func findSubscriptions(ctx context.Context, tx *Tx, filter pa.SubscriptionFilter
 
 // findBlogSubscriptions finds blog subscriptions pointed to by the filter.
 func findBlogSubscriptions(ctx context.Context, tx *Tx, filter pa.SubscriptionFilter) (_ []*pa.Subscription, n int, err error) {
+	// build where and args statement method.
+	// not vulnerable to sql injection attack.
+	where, args := []string{"1 = 1"}, []interface{}{}
 
+	if v := filter.ID; v != nil {
+		where = append(where, "id = ?")
+		args = append(args, *v)
+	}
+	if v := filter.UserID; v != nil {
+		where = append(where, "user_id = ?")
+		args = append(args, *v)
+	}
+	if v := filter.Payload; v != nil {
+		where = append(where, "blog_id = ?")
+		args = append(args, v.(pa.SubBlogPayload).BlogID)
+	}
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			id,
+			user_id,
+			blog_id,
+			COUNT(*) OVER()
+		FROM blog_subscriptions
+		WHERE`+strings.Join(where, " AND ")+`
+		ORDER BY id ASC
+		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
+	`,
+		args...,
+	)
+
+	if err != nil {
+		return nil, n, err
+	}
+
+	// deserialize rows.
+	subscriptions := []*pa.Subscription{}
+	for rows.Next() {
+		var subscription *pa.Subscription
+		var payload pa.SubBlogPayload
+
+		// set topic similar to all subscriptions.
+		subscription.Topic = pa.EventTopicNewSubBlog
+
+		if err := rows.Scan(
+			&subscription.ID,
+			&subscription.UserID,
+			&payload.BlogID,
+			&n,
+		); err != nil {
+			return nil, 0, err
+		}
+
+		// attach blog to payload through blog id.
+		if payload.Blog, err = findBlogByID(ctx, tx, payload.BlogID); err != nil {
+			return nil, 0, err
+		}
+
+		// attach payload to subscription.
+		subscription.Payload = payload
+
+		subscriptions = append(subscriptions, subscription)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return subscriptions, n, nil
 }
 
 // findSubBlogSubscriptions finds sub blog subscriptions pointed to by the filter.
 func findSubBlogSubscriptions(ctx context.Context, tx *Tx, filter pa.SubscriptionFilter) (_ []*pa.Subscription, n int, err error) {
+	// build where and args statement method.
+	// not vulnerable to sql injection attack.
+	where, args := []string{"1 = 1"}, []interface{}{}
+
+	if v := filter.ID; v != nil {
+		where = append(where, "id = ?")
+		args = append(args, *v)
+	}
+	if v := filter.UserID; v != nil {
+		where = append(where, "user_id = ?")
+		args = append(args, *v)
+	}
+	if v := filter.Payload; v != nil {
+		where = append(where, "sub_blog_id = ?")
+		args = append(args, v.(pa.CommentPayload).SubBlogID)
+	}
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			id,
+			user_id,
+			sub_blog_id,
+			COUNT(*) OVER()
+		FROM sub_blog_subscriptions
+		WHERE`+strings.Join(where, " AND ")+`
+		ORDER BY id ASC
+		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
+	`,
+		args...,
+	)
+
+	if err != nil {
+		return nil, n, err
+	}
+
+	// deserialize rows.
+	subscriptions := []*pa.Subscription{}
+	for rows.Next() {
+		var subscription *pa.Subscription
+		var payload pa.CommentPayload
+
+		// set topic similar to all subscriptions.
+		subscription.Topic = pa.EventTopicNewComment
+
+		if err := rows.Scan(
+			&subscription.ID,
+			&subscription.UserID,
+			&payload.SubBlogID,
+			&n,
+		); err != nil {
+			return nil, 0, err
+		}
+
+		// attach blog to payload through blog id.
+		if payload.SubBlog, err = findSubBlogByID(ctx, tx, payload.SubBlogID); err != nil {
+			return nil, 0, err
+		}
+
+		// attach payload to subscription.
+		subscription.Payload = payload
+
+		subscriptions = append(subscriptions, subscription)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return subscriptions, n, nil
 
 }
 
@@ -141,12 +277,60 @@ func createSubscription(ctx context.Context, tx *Tx, subscription *pa.Subscripti
 
 // createBlogSubscription creates a blog subscription.
 func createBlogSubscription(ctx context.Context, tx *Tx, sub *pa.Subscription) error {
+	sub.UserID = pa.UserIDFromContext(ctx)
 
+	result, err := tx.ExecContext(ctx, `
+		INSERT INTO blog_subscriptions (
+			user_id,
+			blog_id,
+		)
+		VALUES(?, ?)
+	`,
+		sub.UserID,
+		sub.Payload.(pa.SubBlogPayload).BlogID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	// set id from database to subscription obj.
+	sub.ID = int(id)
+	return nil
 }
 
 // createSubBlogSubscription creates a sub blog subscription.
 func createSubBlogSubscription(ctx context.Context, tx *Tx, sub *pa.Subscription) error {
+	sub.UserID = pa.UserIDFromContext(ctx)
 
+	result, err := tx.ExecContext(ctx, `
+		INSERT INTO sub_blog_subscriptions (
+			user_id,
+			sub_blog_id,
+		)
+		VALUES(?, ?)
+	`,
+		sub.UserID,
+		sub.Payload.(pa.CommentPayload).SubBlogID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	// set id from database to subscription obj.
+	sub.ID = int(id)
+	return nil
 }
 
 // deleteXXXSubscription -------------------------------------------------------------
@@ -189,10 +373,42 @@ func deleteSubscription(ctx context.Context, tx *Tx, filter pa.SubscriptionFilte
 
 // deleteBlogSubscription deletes the BlogSubscription pointed to by the filter.
 func deleteBlogSubscription(ctx context.Context, tx *Tx, filter pa.SubscriptionFilter) error {
+	sub, _, err := findBlogSubscriptions(ctx, tx, filter)
+	if err != nil {
+		return err
 
+	} else if len(sub) == 0 {
+		return pa.Errorf(pa.ENOTFOUND, "subscription does not exist.")
+	}
+
+	if pa.UserIDFromContext(ctx) != sub[0].UserID {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user is unathorized.")
+	}
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM blog_subscriptions WHERE id = ?`, filter.ID); err != nil {
+		return err
+	}
+	return nil
 }
 
 // deleteSubBlogSubscription deletes the SubBlogSubscription pointed to by the filter.
 func deleteSubBlogSubscription(ctx context.Context, tx *Tx, filter pa.SubscriptionFilter) error {
+	sub, _, err := findSubBlogSubscriptions(ctx, tx, filter)
+	if err != nil {
+		return err
 
+	} else if len(sub) == 0 {
+		return pa.Errorf(pa.ENOTFOUND, "subscription does not exist.")
+	}
+
+	if pa.UserIDFromContext(ctx) != sub[0].UserID {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user is unathorized.")
+	}
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM sub_blog_subscriptions WHERE id = ?`, filter.ID); err != nil {
+		return err
+	}
+	return nil
 }
+
+// TODO: revise code
