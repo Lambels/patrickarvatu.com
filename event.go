@@ -30,12 +30,16 @@ type Event struct {
 
 // SubBlogPayload represents the payload carried by a EventTopicNewSubBlog -> ./event.go.
 type SubBlogPayload struct {
-	SubBlog *SubBlog
+	SubBlog *SubBlog `json:"subBlog"`
+	BlogID  int      `json:"blogID"`
+	Blog    *Blog    `json:"blog"`
 }
 
 // CommentPayload represents the payload carried by a EventTopicNewComment -> ./event.go.
 type CommentPayload struct {
-	Comment *Comment
+	Comment   *Comment `json:"comment"`
+	SubBlogID int      `json:"subBlogID"`
+	SubBlog   *SubBlog `json:"subBlog"`
 }
 
 // EventService represents a service which manages auth in the system.
