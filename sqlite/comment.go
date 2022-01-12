@@ -194,6 +194,7 @@ func findComments(ctx context.Context, tx *Tx, filter pa.CommentFilter) (_ []*pa
 }
 
 func createComment(ctx context.Context, tx *Tx, comment *pa.Comment) error {
+	comment.UserID = pa.UserIDFromContext(ctx)
 	comment.CreatedAt = tx.now
 
 	if err := comment.Validate(); err != nil {
