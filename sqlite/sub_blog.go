@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"context"
+	"strings"
 
 	pa "github.com/Lambels/patrickarvatu.com"
 )
@@ -124,20 +125,172 @@ func findSubBlogByID(ctx context.Context, tx *Tx, id int) (*pa.SubBlog, error) {
 	return subBlogs[0], nil
 }
 
-func findSubBlogs(ctx context.Context, tx *Tx, filter pa.SubBlogFilter) ([]*pa.SubBlog, int, error) {
+func findSubBlogs(ctx context.Context, tx *Tx, filter pa.SubBlogFilter) (_ []*pa.SubBlog, n int, err error) {
+	// build where and args statement method.
+	// not vulnerable to sql injection attack.
+	where, args := []string{"1 = 1"}, []interface{}{}
 
+	if v := filter.ID; v != nil {
+		where = append(where, "id = ?")
+		args = append(args, *v)
+	}
+	if v := filter.Title; v != nil {
+		where = append(where, "title = ?")
+		args = append(args, *v)
+	}
+	if v := filter.BlogID; v != nil {
+		where = append(where, "blog_id = ?")
+		args = append(args, *v)
+	}
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			id,
+			title,
+			blog_id,
+			content,
+			created_at,
+			updated_at,
+			COUNT(*) OVER()
+		FROM blogs
+		WHERE`+strings.Join(where, " AND ")+`
+		ORDER BY id ASC
+		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
+	`,
+		args...,
+	)
+
+	if err != nil {
+		return nil, n, err
+	}
+	defer rows.Close()
+
+	// deserialize rows.
+	subBlogs := []*pa.SubBlog{}
+	for rows.Next() {
+		var subBlog *pa.SubBlog
+
+		if err := rows.Scan(
+			&subBlog.ID,
+			&subBlog.Title,
+			&subBlog.Content,
+			(*NullTime)(&subBlog.CreatedAt),
+			(*NullTime)(&subBlog.UpdatedAt),
+			&n,
+		); err != nil {
+			return nil, 0, err
+		}
+
+		if err := attachCommentsToSubBlog(ctx, tx, subBlog); err != nil {
+			return nil, 0, err
+		}
+
+		subBlogs = append(subBlogs, subBlog)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return subBlogs, n, nil
 }
 
 func createSubBlog(ctx context.Context, tx *Tx, subBlog *pa.SubBlog) error {
+	if !pa.IsAdminContext(ctx) {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
 
+	subBlog.CreatedAt = tx.now
+	subBlog.UpdatedAt = subBlog.CreatedAt
+
+	if err := subBlog.Validate(); err != nil {
+		return err
+	}
+
+	result, err := tx.ExecContext(ctx, `
+		INSERT INTO blogs (
+			blog_id,
+			title,
+			content,
+			created_at,
+			updated_at,
+		)
+		VALUES(?, ?, ?, ?, ?)
+	`,
+		subBlog.BlogID,
+		subBlog.Title,
+		subBlog.Content,
+		(*NullTime)(&subBlog.CreatedAt),
+		(*NullTime)(&subBlog.UpdatedAt),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	// set id from database to blog obj.
+	subBlog.ID = int(id)
+	return nil
 }
 
 func updateSubBlog(ctx context.Context, tx *Tx, id int, update pa.SubBlogUpdate) (*pa.SubBlog, error) {
+	if !pa.IsAdminContext(ctx) {
+		return nil, pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
 
+	subBlog, err := findSubBlogByID(ctx, tx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if v := update.Content; v != nil {
+		subBlog.Content = *v
+	}
+	if v := update.Title; v != nil {
+		subBlog.Title = *v
+	}
+
+	if err := subBlog.Validate(); err != nil {
+		return nil, err
+	}
+
+	subBlog.UpdatedAt = tx.now
+
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE sub_blogs,
+		SET content = ?,
+			title = ?,
+			updated_at = ?,
+		WHERE id = ?	
+	`,
+		subBlog.Content,
+		subBlog.Title,
+		subBlog.UpdatedAt,
+		id,
+	); err != nil {
+		return nil, err
+	}
+
+	return subBlog, nil
 }
 
 func deleteSubBlog(ctx context.Context, tx *Tx, id int) error {
+	if !pa.IsAdminContext(ctx) {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
 
+	if _, err := findSubBlogByID(ctx, tx, id); err != nil {
+		return err
+	}
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM sub_blogs WHERE id = ?`, id); err != nil {
+		return err
+	}
+	return nil
 }
 
 func attachCommentsToSubBlog(ctx context.Context, tx *Tx, subBlog *pa.SubBlog) error {
