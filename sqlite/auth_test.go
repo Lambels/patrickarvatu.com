@@ -11,8 +11,8 @@ import (
 )
 
 func TestCreateAuth(t *testing.T) {
-	t.Run("Ok Call", func(t *testing.T) {
-		db := MustOpenDB(t)
+	t.Run("Ok Create Call", func(t *testing.T) {
+		db := MustOpenDB(t, "./database.db")
 		defer MustCloseDB(t, db)
 
 		backgroundCtx := context.Background()
@@ -22,7 +22,6 @@ func TestCreateAuth(t *testing.T) {
 		time := time.Date(2022, time.January, 8, 0, 0, 0, 0, time.UTC)
 		auth := &pa.Auth{
 			User: &pa.User{ // make sure we dont provide uID indicating that we want to create a user.
-				ID:    1,
 				Name:  "Jhon",
 				Email: "jhon@doe.com",
 			},
@@ -59,7 +58,7 @@ func TestCreateAuth(t *testing.T) {
 	})
 
 	t.Run("User Not Found", func(t *testing.T) {
-		db := MustOpenDB(t)
+		db := MustOpenDB(t, "./database.db")
 		defer MustCloseDB(t, db)
 
 		backgroundCtx := context.Background()
@@ -81,7 +80,53 @@ func TestCreateAuth(t *testing.T) {
 		}
 	})
 
-	// TODO: add ok update auth test.
+	t.Run("Ok Update Call", func(t *testing.T) {
+		db := MustOpenDB(t, "./database.db")
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		authService := sqlite.NewAuthService(db)
+
+		time := time.Date(2022, time.January, 8, 0, 0, 0, 0, time.UTC)
+		auth := &pa.Auth{
+			User: &pa.User{ // make sure we dont provide uID indicating that we want to create a user.
+				ID:    1,
+				Name:  "Jhon",
+				Email: "jhon@doe.com",
+			},
+			Source:       "cool-source",
+			SourceID:     "cooler-source-id",
+			RefreshToken: "my-secret-token",
+			AccessToken:  "my-very-secret-token",
+			Expiry:       &time,
+		}
+
+		auth2 := &pa.Auth{
+			UserID:       1,
+			Source:       "cool-source",
+			SourceID:     "cooler-source-id",
+			RefreshToken: "my-secret-token-2",
+			AccessToken:  "my-very-secret-token-2",
+			Expiry:       &time,
+		}
+
+		// create + update auth.
+		if err := authService.CreateAuth(backgroundCtx, auth); err != nil {
+			t.Fatal(err)
+		} else if err := authService.CreateAuth(backgroundCtx, auth2); err != nil {
+			t.Fatal(err)
+		}
+
+		// assert updating.
+		if gotAuth, err := authService.FindAuthByID(backgroundCtx, 1); err != nil {
+			t.Fatal(err)
+		} else if auth2.AccessToken != gotAuth.AccessToken {
+			t.Fatal("Access tokens dont match")
+		} else if auth2.RefreshToken != gotAuth.RefreshToken {
+			t.Fatal("Refresh tokens dont match")
+		}
+	})
 }
 
 // TODO: add testing for all CRUD functions.
