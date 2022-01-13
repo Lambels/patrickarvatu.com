@@ -230,7 +230,7 @@ func (db *DB) update(ctx context.Context) error {
 	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM comments;`).Scan(&n); err != nil {
 		return fmt.Errorf("comment count: %w", err)
 	}
-	userCountGauge.Set(float64(n))
+	commentCountGauge.Set(float64(n))
 
 	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM blog_subscriptions;`).Scan(&n); err != nil {
 		return fmt.Errorf("blog subscription count: %w", err)
