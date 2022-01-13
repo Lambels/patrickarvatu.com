@@ -2,4 +2,6 @@
 *.exe
 *.conf
 *.db
+*.db-shm
+*.db-wal
 dump.rdb
