@@ -13,7 +13,6 @@ import (
 	"sort"
 	"time"
 
-	pa "github.com/Lambels/patrickarvatu.com"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -56,25 +55,21 @@ type DB struct {
 
 	DSN string
 
-	// sqlite package will use events, ie: blog:sub_blog:comment:new, blog:sub_blog:new etc
-	EventService pa.EventService
-
 	Now func() time.Time
 }
 
 type Tx struct {
 	*sql.Tx
-	db  *DB
 	now time.Time
 }
 
 func NewDB(dsn string) *DB {
 	db := &DB{
-		DSN:          dsn,
-		Now:          time.Now,
-		EventService: pa.NewNOPEventService(), // usefull for testing when ignoring events. + clean creation, no possible error.
+		DSN: dsn,
+		Now: time.Now,
 	}
 
+	db.ctx, db.cancel = context.WithCancel(context.Background())
 	return db
 }
 
@@ -115,7 +110,7 @@ func (db *DB) migrate() error {
 		return fmt.Errorf("cannot create migrations table: %w", err)
 	}
 
-	names, err := fs.Glob(migrationFS, "./migration/*.sql")
+	names, err := fs.Glob(migrationFS, "migration/*.sql")
 	if err != nil {
 		return err
 	}
@@ -171,7 +166,6 @@ func (db *DB) BeginTX(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 
 	return &Tx{
 		Tx:  tx,
-		db:  db,
 		now: db.Now().UTC().Truncate(time.Second),
 	}, nil
 }
