@@ -32,10 +32,10 @@ func MustOpenTempDB(t testing.TB) *sqlite.DB {
 	return db
 }
 
-func MustOpenDB(t testing.TB) *sqlite.DB {
+func MustOpenDB(t testing.TB, dsn string) *sqlite.DB {
 	t.Helper()
 
-	db := sqlite.NewDB(":memory:")
+	db := sqlite.NewDB(dsn)
 	if err := db.Open(); err != nil {
 		t.Fatalf("open: %s", err.Error())
 	}
