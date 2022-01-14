@@ -168,7 +168,7 @@ func findSubBlogs(ctx context.Context, tx *Tx, filter pa.SubBlogFilter) (_ []*pa
 	// deserialize rows.
 	subBlogs := []*pa.SubBlog{}
 	for rows.Next() {
-		var subBlog *pa.SubBlog
+		var subBlog pa.SubBlog
 
 		if err := rows.Scan(
 			&subBlog.ID,
@@ -181,11 +181,11 @@ func findSubBlogs(ctx context.Context, tx *Tx, filter pa.SubBlogFilter) (_ []*pa
 			return nil, 0, err
 		}
 
-		if err := attachCommentsToSubBlog(ctx, tx, subBlog); err != nil {
+		if err := attachCommentsToSubBlog(ctx, tx, &subBlog); err != nil {
 			return nil, 0, err
 		}
 
-		subBlogs = append(subBlogs, subBlog)
+		subBlogs = append(subBlogs, &subBlog)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, err
