@@ -58,7 +58,7 @@ func TestCreateAuth(t *testing.T) {
 		}
 	})
 
-	t.Run("Bad Update Call", func(t *testing.T) {
+	t.Run("Bad Update Call (Not Found)", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
 
@@ -76,6 +76,7 @@ func TestCreateAuth(t *testing.T) {
 			Expiry:       &time,
 		}
 
+		// update auth (Not found).
 		if err := authService.CreateAuth(backgroundCtx, auth); err == nil {
 			t.Fatal("expected error")
 		} else {
@@ -132,4 +133,106 @@ func TestCreateAuth(t *testing.T) {
 	})
 }
 
-// TODO: add testing for all CRUD functions.
+func TestDeleteAuth(t *testing.T) {
+	t.Parallel() // run tests in parallel.
+	t.Run("Ok Delete Call", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		authService := sqlite.NewAuthService(db)
+
+		auth := &pa.Auth{
+			User: &pa.User{
+				Name:  "Mona Lisa",
+				Email: "octo@cat.com",
+			},
+			Source:       "cool-source",
+			SourceID:     "cooler-source-id",
+			RefreshToken: "my-secret-token",
+			AccessToken:  "my-very-secret-token",
+		}
+
+		// create auth.
+		if err := authService.CreateAuth(backgroundCtx, auth); err != nil {
+			t.Fatal(err)
+		}
+
+		// declare ctx with enriched user.
+		userCtx := pa.NewContextWithUser(backgroundCtx, auth.User)
+
+		// delete auth.
+		if err := authService.DeleteAuth(userCtx, 1); err != nil {
+			t.Fatal(err)
+		}
+
+		// assert deletion.
+		if _, err := authService.FindAuthByID(backgroundCtx, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
+	})
+
+	t.Run("Bad Delete Call (Un Authorized)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		authService := sqlite.NewAuthService(db)
+
+		auth := &pa.Auth{
+			User: &pa.User{
+				Name:  "Mona Lisa",
+				Email: "octo@cat.com",
+			},
+			Source:       "cool-source",
+			SourceID:     "cooler-source-id",
+			RefreshToken: "my-secret-token",
+			AccessToken:  "my-very-secret-token",
+		}
+
+		// create auth.
+		if err := authService.CreateAuth(backgroundCtx, auth); err != nil {
+			t.Fatal(err)
+		}
+
+		auth2 := &pa.Auth{
+			User: &pa.User{
+				Name:  "Bad Man",
+				Email: "hacker@hacker.com",
+			},
+			Source:       "cool-source-2",
+			SourceID:     "cooler-source-id-2",
+			RefreshToken: "my-secret-token-2",
+			AccessToken:  "my-very-secret-token-2",
+		}
+
+		// create auth.
+		if err := authService.CreateAuth(backgroundCtx, auth2); err != nil {
+			t.Fatal(err)
+		}
+
+		// declare ctx with enriched user.
+		userCtx := pa.NewContextWithUser(backgroundCtx, auth2.User)
+
+		// delete auth (Un Auth).
+		if err := authService.DeleteAuth(userCtx, 1); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
+			t.Fatal("err != EUNAUTHORIZED")
+		}
+	})
+
+	t.Run("Bad Delete Call (Not Found)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		authService := sqlite.NewAuthService(db)
+
+		// delete auth. (Not Found).
+		if err := authService.DeleteAuth(backgroundCtx, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
+	})
+}
