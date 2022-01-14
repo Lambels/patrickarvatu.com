@@ -8,6 +8,7 @@ import (
 	"time"
 
 	pa "github.com/Lambels/patrickarvatu.com"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // check to see if *AuthService object implements set interface.
@@ -100,7 +101,7 @@ func (s *AuthService) CreateAuth(ctx context.Context, auth *pa.Auth) error {
 	// the existance of the auth.User indicates that we want to attach the auth to the user
 	if auth.UserID == 0 && auth.User != nil {
 
-		if user, err := findUserByEmail(ctx, tx, auth.User.Email); err != nil {
+		if user, err := findUserByEmail(ctx, tx, auth.User.Email); err == nil {
 			auth.User = user // user exists so we attach
 
 		} else if pa.ErrorCode(err) == pa.ENOTFOUND {
@@ -113,7 +114,7 @@ func (s *AuthService) CreateAuth(ctx context.Context, auth *pa.Auth) error {
 		}
 
 		// attach the user id to the newly created user
-		auth.ID = auth.User.ID
+		auth.UserID = auth.User.ID
 	}
 
 	if err := createAuth(ctx, tx, auth); err != nil {
@@ -221,7 +222,7 @@ func findAuths(ctx context.Context, tx *Tx, filter pa.AuthFilter) (_ []*pa.Auth,
 	// deserialize rows.
 	auths := []*pa.Auth{}
 	for rows.Next() {
-		var auth *pa.Auth
+		var auth pa.Auth
 		var expiry sql.NullString
 
 		if err := rows.Scan(
@@ -247,7 +248,7 @@ func findAuths(ctx context.Context, tx *Tx, filter pa.AuthFilter) (_ []*pa.Auth,
 			}
 		}
 
-		auths = append(auths, auth)
+		auths = append(auths, &auth)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, err
@@ -279,7 +280,7 @@ func createAuth(ctx context.Context, tx *Tx, auth *pa.Auth) error {
 		    refresh_token,
 		    expiry,
 		    created_at,
-		    updated_at,
+		    updated_at
 		)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`,
@@ -336,7 +337,7 @@ func updateAuth(ctx context.Context, tx *Tx, id int, accesToken, refreshToken st
 		SET access_token 	= ?,
 			refresh_token 	= ?,
 			expiry			= ?,
-			updated_at		= ?,
+			updated_at		= ?
 		WHERE id = ?
 	`,
 		auth.AccessToken,
@@ -352,12 +353,12 @@ func updateAuth(ctx context.Context, tx *Tx, id int, accesToken, refreshToken st
 }
 
 func deleteAuth(ctx context.Context, tx *Tx, id int) error {
-	userID := pa.UserIDFromContext(ctx)
-
 	auth, err := findAuthByID(ctx, tx, id)
 	if err != nil {
 		return err
 	}
+
+	userID := pa.UserIDFromContext(ctx)
 
 	if auth.UserID != userID {
 		return pa.Errorf(pa.EUNAUTHORIZED, "cannot delete someone else's auth.")
