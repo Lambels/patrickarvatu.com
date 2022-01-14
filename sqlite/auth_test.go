@@ -11,8 +11,9 @@ import (
 )
 
 func TestCreateAuth(t *testing.T) {
+	t.Parallel() // run tests in parallel.
 	t.Run("Ok Create Call", func(t *testing.T) {
-		db := MustOpenDB(t, "./database.db")
+		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
 
 		backgroundCtx := context.Background()
@@ -57,8 +58,8 @@ func TestCreateAuth(t *testing.T) {
 		}
 	})
 
-	t.Run("User Not Found", func(t *testing.T) {
-		db := MustOpenDB(t, "./database.db")
+	t.Run("Bad Update Call", func(t *testing.T) {
+		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
 
 		backgroundCtx := context.Background()
@@ -75,13 +76,15 @@ func TestCreateAuth(t *testing.T) {
 			Expiry:       &time,
 		}
 
-		if err := authService.CreateAuth(backgroundCtx, auth); pa.ErrorCode(err) != pa.ENOTFOUND {
-			t.Fatal("err != pa.ENOTFOUND")
+		if err := authService.CreateAuth(backgroundCtx, auth); err == nil {
+			t.Fatal("expected error")
+		} else {
+			t.Log(err) // FOREIGN KEY constraint failed "user not found".
 		}
 	})
 
 	t.Run("Ok Update Call", func(t *testing.T) {
-		db := MustOpenDB(t, "./database.db")
+		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
 
 		backgroundCtx := context.Background()
