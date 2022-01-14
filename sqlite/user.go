@@ -187,7 +187,7 @@ func findUsers(ctx context.Context, tx *Tx, filter pa.UserFilter) (_ []*pa.User,
 	users := []*pa.User{}
 	for rows.Next() {
 		var email sql.NullString
-		var user *pa.User
+		var user pa.User
 		if err := rows.Scan(
 			&user.ID,
 			&user.Name,
@@ -204,7 +204,7 @@ func findUsers(ctx context.Context, tx *Tx, filter pa.UserFilter) (_ []*pa.User,
 			user.Email = email.String
 		}
 
-		users = append(users, user)
+		users = append(users, &user)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, err

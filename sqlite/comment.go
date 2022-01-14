@@ -171,7 +171,7 @@ func findComments(ctx context.Context, tx *Tx, filter pa.CommentFilter) (_ []*pa
 	// deserialize rows.
 	comments := []*pa.Comment{}
 	for rows.Next() {
-		var comment *pa.Comment
+		var comment pa.Comment
 
 		if err := rows.Scan(
 			&comment.ID,
@@ -184,7 +184,7 @@ func findComments(ctx context.Context, tx *Tx, filter pa.CommentFilter) (_ []*pa
 			return nil, 0, err
 		}
 
-		comments = append(comments, comment)
+		comments = append(comments, &comment)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, err

@@ -188,7 +188,7 @@ func findBlogs(ctx context.Context, tx *Tx, filter pa.BlogFilter) (_ []*pa.Blog,
 	// deserialize rows.
 	blogs := []*pa.Blog{}
 	for rows.Next() {
-		var blog *pa.Blog
+		var blog pa.Blog
 
 		if err := rows.Scan(
 			&blog.ID,
@@ -201,7 +201,7 @@ func findBlogs(ctx context.Context, tx *Tx, filter pa.BlogFilter) (_ []*pa.Blog,
 			return nil, 0, err
 		}
 
-		blogs = append(blogs, blog)
+		blogs = append(blogs, &blog)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, err

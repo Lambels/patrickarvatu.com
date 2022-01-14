@@ -92,7 +92,7 @@ func findSubscriptions(ctx context.Context, tx *Tx, filter pa.SubscriptionFilter
 		}
 
 	default:
-		fmt.Errorf("findSubscriptions: unidentified topic %v", *filter.Topic)
+		return nil, 0, fmt.Errorf("findSubscriptions: unidentified topic %v", *filter.Topic)
 	}
 
 	return subs, n, nil
@@ -138,7 +138,7 @@ func findBlogSubscriptions(ctx context.Context, tx *Tx, filter pa.SubscriptionFi
 	// deserialize rows.
 	subscriptions := []*pa.Subscription{}
 	for rows.Next() {
-		var subscription *pa.Subscription
+		var subscription pa.Subscription
 		var payload pa.SubBlogPayload
 
 		// set topic similar to all subscriptions.
@@ -161,7 +161,7 @@ func findBlogSubscriptions(ctx context.Context, tx *Tx, filter pa.SubscriptionFi
 		// attach payload to subscription.
 		subscription.Payload = payload
 
-		subscriptions = append(subscriptions, subscription)
+		subscriptions = append(subscriptions, &subscription)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, err
@@ -210,7 +210,7 @@ func findSubBlogSubscriptions(ctx context.Context, tx *Tx, filter pa.Subscriptio
 	// deserialize rows.
 	subscriptions := []*pa.Subscription{}
 	for rows.Next() {
-		var subscription *pa.Subscription
+		var subscription pa.Subscription
 		var payload pa.CommentPayload
 
 		// set topic similar to all subscriptions.
@@ -233,7 +233,7 @@ func findSubBlogSubscriptions(ctx context.Context, tx *Tx, filter pa.Subscriptio
 		// attach payload to subscription.
 		subscription.Payload = payload
 
-		subscriptions = append(subscriptions, subscription)
+		subscriptions = append(subscriptions, &subscription)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, err
