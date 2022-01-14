@@ -6,11 +6,11 @@ patrickarvatu.com isnt yet in production, however it is under active development
 
 ### Things Done:
 - SQL logic implemented.
+- implement sql code in sql package
 - Event Service implemented using [asynq](https://github.com/hibiken/asynq)
 
 ### TODO:
 - CLI start upp
-- implement sql code in sql package
 - http exposure to the sql package
 - FRONTEND
 - OAuth github implementation
