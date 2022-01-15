@@ -275,15 +275,15 @@ func updateBlog(ctx context.Context, tx *Tx, id int, update pa.BlogUpdate) (*pa.
 	blog.UpdatedAt = tx.now
 
 	if _, err := tx.ExecContext(ctx, `
-		UPDATE blogs,
+		UPDATE blogs
 		SET title 		= ?,
 			description = ?,
-			updated_at	= ?,
+			updated_at	= ?
 		WHERE id = ?
 	`,
 		blog.Title,
 		blog.Description,
-		blog.UpdatedAt,
+		(*NullTime)(&blog.UpdatedAt),
 		id,
 	); err != nil {
 		return nil, err
