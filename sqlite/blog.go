@@ -173,7 +173,7 @@ func findBlogs(ctx context.Context, tx *Tx, filter pa.BlogFilter) (_ []*pa.Blog,
 			updated_at,
 			COUNT(*) OVER()
 		FROM blogs
-		WHERE`+strings.Join(where, " AND ")+`
+		WHERE `+strings.Join(where, " AND ")+`
 		ORDER BY id ASC
 		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
 	`,
@@ -227,7 +227,7 @@ func createBlog(ctx context.Context, tx *Tx, blog *pa.Blog) error {
 			title,
 			description,
 			created_at,
-			updated_at,
+			updated_at
 		)
 		VALUES(?, ?, ?, ?)
 	`,
