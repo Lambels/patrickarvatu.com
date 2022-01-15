@@ -152,8 +152,8 @@ func findSubBlogs(ctx context.Context, tx *Tx, filter pa.SubBlogFilter) (_ []*pa
 			created_at,
 			updated_at,
 			COUNT(*) OVER()
-		FROM blogs
-		WHERE`+strings.Join(where, " AND ")+`
+		FROM sub_blogs
+		WHERE `+strings.Join(where, " AND ")+`
 		ORDER BY id ASC
 		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
 	`,
