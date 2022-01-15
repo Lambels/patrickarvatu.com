@@ -48,3 +48,11 @@ func MustCloseDB(t testing.TB, db *sqlite.DB) {
 		t.Fatalf("close: %s", err.Error())
 	}
 }
+
+func NewStringPointer(str string) *string {
+	return &str
+}
+
+func NewIntPointer(n int) *int {
+	return &n
+}
