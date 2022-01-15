@@ -10,18 +10,22 @@ import (
 )
 
 func TestCreateBlog(t *testing.T) {
-	t.Run("Ok Call", func(t *testing.T) {
-		db := MustOpenDB(t)
+	t.Parallel()
+	t.Run("Ok Create Call", func(t *testing.T) {
+		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
 
 		backgroundCtx := context.Background()
-		adminUsrContext := pa.NewContextWithUser(backgroundCtx, &pa.User{
-			Name:    "jhon DOE",
-			Email:   "jhon@doe.com",
-			IsAdmin: true,
-		})
 
 		blogService := sqlite.NewBlogService(db)
+
+		user := &pa.User{
+			Name:    "Jhon Doe",
+			Email:   "jhon@doe.com",
+			IsAdmin: true,
+		} // no need to create user as CreateBlog doesent check any keys.
+
+		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
 
 		blog := &pa.Blog{
 			Title:       "Epic Blog",
@@ -47,15 +51,15 @@ func TestCreateBlog(t *testing.T) {
 		}
 	})
 
-	t.Run("UnAuth", func(t *testing.T) {
-		db := MustOpenDB(t)
+	t.Run("Bad Create Call (Un Auth)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
 
 		backgroundCtx := context.Background()
 		usrContext := pa.NewContextWithUser(backgroundCtx, &pa.User{
 			Name:  "jhon DOE",
 			Email: "jhon@doe.com",
-		})
+		}) // no need to create user as CreateBlog doesent check any keys.
 
 		blogService := sqlite.NewBlogService(db)
 
@@ -64,7 +68,7 @@ func TestCreateBlog(t *testing.T) {
 			Description: "Honestly the best blog ever.",
 		}
 
-		// create blog.
+		// create blog (Un Auth).
 		if err := blogService.CreateBlog(usrContext, blog); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
 			t.Fatal("expected UnAuth error")
 		} else if blog.ID != 0 {
@@ -74,3 +78,106 @@ func TestCreateBlog(t *testing.T) {
 }
 
 // TODO: add testing for rest of CRUD methods.
+func TestDeleteBlog(t *testing.T) {
+	t.Parallel()
+	t.Run("Ok Delete Call", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		blogService := sqlite.NewBlogService(db)
+
+		user := &pa.User{
+			Name:    "Jhon Doe",
+			Email:   "jhon@doe.com",
+			IsAdmin: true,
+		} // no need to create user as CreateBlog doesent check any keys.
+
+		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
+
+		blog := &pa.Blog{
+			Title:       "Epic Blog",
+			Description: "Honestly the best blog ever.",
+		}
+
+		// create blog.
+		if err := blogService.CreateBlog(adminUsrContext, blog); err != nil {
+			t.Fatal(err)
+		}
+
+		// delete blog.
+		if err := blogService.DeleteBlog(adminUsrContext, 1); err != nil {
+			t.Fatal(err)
+		}
+
+		// assert deletion.
+		if _, err := blogService.FindBlogByID(backgroundCtx, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
+	})
+
+	t.Run("Bad Delete Call (Un Auth)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		blogService := sqlite.NewBlogService(db)
+
+		user := &pa.User{
+			Name:    "Jhon Doe",
+			Email:   "jhon@doe.com",
+			IsAdmin: true,
+		} // no need to create user as CreateBlog doesent check any keys.
+
+		user2 := &pa.User{
+			Name:  "Lambels",
+			Email: "Lamb@Lambels.com",
+		}
+
+		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
+		user2Context := pa.NewContextWithUser(backgroundCtx, user2)
+
+		blog := &pa.Blog{
+			Title:       "Epic Blog",
+			Description: "Honestly the best blog ever.",
+		}
+
+		// create blog.
+		if err := blogService.CreateBlog(adminUsrContext, blog); err != nil {
+			t.Fatal(err)
+		}
+
+		// delete blog.
+		if err := blogService.DeleteBlog(user2Context, 1); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
+			t.Fatal("err != EUNAUTHORIZED")
+		}
+	})
+
+	t.Run("Bad Delete Call (Not Found)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		blogService := sqlite.NewBlogService(db)
+
+		user := &pa.User{
+			Name:    "Jhon Doe",
+			Email:   "jhon@doe.com",
+			IsAdmin: true,
+		} // no need to create user as CreateBlog doesent check any keys.
+
+		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
+
+		// delete blog (Not Found).
+		if err := blogService.DeleteBlog(adminUsrContext, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
+	})
+}
+
+func TestUpdateBlog(t *testing.T) {
+	t.Parallel()
+}
