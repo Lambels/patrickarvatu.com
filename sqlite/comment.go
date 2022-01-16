@@ -157,7 +157,7 @@ func findComments(ctx context.Context, tx *Tx, filter pa.CommentFilter) (_ []*pa
 			created_at,
 			COUNT(*) OVER()
 		FROM comments
-		WHERE`+strings.Join(where, " AND ")+`
+		WHERE `+strings.Join(where, " AND ")+`
 		ORDER BY id ASC
 		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
 	`,
@@ -206,7 +206,7 @@ func createComment(ctx context.Context, tx *Tx, comment *pa.Comment) error {
 			sub_blog_id,
 			user_id,
 			content,
-			created_at,
+			created_at
 		)
 		VALUES(?, ?, ?, ?)
 	`,
@@ -249,8 +249,8 @@ func updateComment(ctx context.Context, tx *Tx, id int, update pa.CommentUpdate)
 	}
 
 	if _, err := tx.ExecContext(ctx, `
-		UPDATE comments,
-		SET content = ?,
+		UPDATE comments
+		SET content = ?
 		WHERE id = ?
 	`,
 		comment.Content,
