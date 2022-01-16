@@ -14,13 +14,13 @@ func TestEventService(t *testing.T) {
 	defer s.Close()
 	go s.Open()
 
-	t.Run("Register Subscription Handler", func(t *testing.T) {
+	t.Run("Register Subscription Handler", func(_ *testing.T) {
 		s.RegisterSubscriptionsHandler(nil)
 	})
 
 	t.Run("Register Handlers", func(t *testing.T) {
 		// Wont use ctx and hand for tests
-		s.RegisterHandler(pa.EventTopicNewSubBlog, func(ctx context.Context, hand pa.SubscriptionService, event pa.Event) error {
+		s.RegisterHandler(pa.EventTopicNewSubBlog, func(_ context.Context, _ pa.SubscriptionService, event pa.Event) error {
 			payload := new(pa.SubBlogPayload)
 			if err := json.Unmarshal(event.Payload.([]byte), payload); err != nil {
 				t.Fatal(err)
