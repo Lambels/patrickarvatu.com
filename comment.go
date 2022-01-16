@@ -28,6 +28,12 @@ func (c *Comment) Validate() error {
 	if c.Content == "" {
 		return Errorf(EINVALID, "content is a required field.")
 	}
+	if c.SubBlogID == 0 {
+		return Errorf(EINVALID, "comment must be linked to a sub blog.")
+	}
+	if c.UserID == 0 {
+		return Errorf(EINVALID, "comment must be linked to a user.")
+	}
 
 	return nil
 }
