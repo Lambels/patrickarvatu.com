@@ -207,12 +207,12 @@ func createSubBlog(ctx context.Context, tx *Tx, subBlog *pa.SubBlog) error {
 	}
 
 	result, err := tx.ExecContext(ctx, `
-		INSERT INTO blogs (
+		INSERT INTO sub_blogs (
 			blog_id,
 			title,
 			content,
 			created_at,
-			updated_at,
+			updated_at
 		)
 		VALUES(?, ?, ?, ?, ?)
 	`,
@@ -261,10 +261,10 @@ func updateSubBlog(ctx context.Context, tx *Tx, id int, update pa.SubBlogUpdate)
 	subBlog.UpdatedAt = tx.now
 
 	if _, err := tx.ExecContext(ctx, `
-		UPDATE sub_blogs,
-		SET content = ?,
-			title = ?,
-			updated_at = ?,
+		UPDATE sub_blogs
+		SET content		= ?,
+			title 		= ?,
+			updated_at 	= ?
 		WHERE id = ?	
 	`,
 		subBlog.Content,
