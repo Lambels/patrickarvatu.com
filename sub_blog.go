@@ -34,6 +34,9 @@ func (s *SubBlog) Validate() error {
 	if s.Content == "" {
 		return Errorf(EINVALID, "content is a required field.")
 	}
+	if s.BlogID == 0 {
+		return Errorf(EINVALID, "sub blog must be linked to blog.")
+	}
 
 	return nil
 }
