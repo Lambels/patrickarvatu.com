@@ -102,9 +102,7 @@ func TestDeleteBlog(t *testing.T) {
 		}
 
 		// create blog.
-		if err := blogService.CreateBlog(adminUsrContext, blog); err != nil {
-			t.Fatal(err)
-		}
+		MustCreateBlog(t, db, adminUsrContext, blog)
 
 		// delete blog.
 		if err := blogService.DeleteBlog(adminUsrContext, 1); err != nil {
@@ -145,9 +143,7 @@ func TestDeleteBlog(t *testing.T) {
 		}
 
 		// create blog.
-		if err := blogService.CreateBlog(adminUsrContext, blog); err != nil {
-			t.Fatal(err)
-		}
+		MustCreateBlog(t, db, adminUsrContext, blog)
 
 		// delete blog.
 		if err := blogService.DeleteBlog(user2Context, 1); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
@@ -206,9 +202,7 @@ func TestUpdateBlog(t *testing.T) {
 		}
 
 		// create blog.
-		if err := blogService.CreateBlog(adminUsrContext, blog); err != nil {
-			t.Fatal(err)
-		}
+		MustCreateBlog(t, db, adminUsrContext, blog)
 
 		// update blog.
 		if updatedBlog, err := blogService.UpdateBlog(adminUsrContext, 1, update); err != nil {
@@ -253,9 +247,7 @@ func TestUpdateBlog(t *testing.T) {
 		}
 
 		// create blog.
-		if err := blogService.CreateBlog(adminUsrContext, blog); err != nil {
-			t.Fatal(err)
-		}
+		MustCreateBlog(t, db, adminUsrContext, blog)
 
 		// update blog (Un Auth).
 		if _, err := blogService.UpdateBlog(user2Context, 1, update); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
@@ -289,4 +281,25 @@ func TestUpdateBlog(t *testing.T) {
 			t.Fatal("err != ENOTFOUND")
 		}
 	})
+}
+
+func TestFindBlogs(t *testing.T) {
+	t.Run("Ok Find Call (filter - id)", func(t *testing.T) {
+
+	})
+
+	t.Run("Ok Find Call (filter - title)", func(t *testing.T) {
+
+	})
+
+	t.Run("Bad Find Call (Not Found)", func(t *testing.T) {
+
+	})
+}
+
+func MustCreateBlog(t *testing.T, db *sqlite.DB, ctx context.Context, blog *pa.Blog) {
+	t.Helper()
+	if err := sqlite.NewBlogService(db).CreateBlog(ctx, blog); err != nil {
+		t.Fatal(err)
+	}
 }
