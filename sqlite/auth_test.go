@@ -80,6 +80,7 @@ func TestCreateAuth(t *testing.T) {
 		if err := authService.CreateAuth(backgroundCtx, auth); err == nil {
 			t.Fatal("expected error")
 		} else {
+			// TODO: Parse foreign key err to not found.
 			t.Log(err) // FOREIGN KEY constraint failed "user not found".
 		}
 	})
@@ -116,11 +117,8 @@ func TestCreateAuth(t *testing.T) {
 		}
 
 		// create + update auth.
-		if err := authService.CreateAuth(backgroundCtx, auth); err != nil {
-			t.Fatal(err)
-		} else if err := authService.CreateAuth(backgroundCtx, auth2); err != nil {
-			t.Fatal(err)
-		}
+		MustCreateAuth(t, db, backgroundCtx, auth)
+		MustCreateAuth(t, db, backgroundCtx, auth2)
 
 		// assert updating.
 		if gotAuth, err := authService.FindAuthByID(backgroundCtx, 1); err != nil {
@@ -155,12 +153,7 @@ func TestDeleteAuth(t *testing.T) {
 		}
 
 		// create auth.
-		if err := authService.CreateAuth(backgroundCtx, auth); err != nil {
-			t.Fatal(err)
-		}
-
-		// declare ctx with enriched user.
-		userCtx := pa.NewContextWithUser(backgroundCtx, auth.User)
+		userCtx := MustCreateAuth(t, db, backgroundCtx, auth)
 
 		// delete auth.
 		if err := authService.DeleteAuth(userCtx, 1); err != nil {
@@ -193,9 +186,7 @@ func TestDeleteAuth(t *testing.T) {
 		}
 
 		// create auth.
-		if err := authService.CreateAuth(backgroundCtx, auth); err != nil {
-			t.Fatal(err)
-		}
+		MustCreateAuth(t, db, backgroundCtx, auth)
 
 		auth2 := &pa.Auth{
 			User: &pa.User{
@@ -209,12 +200,7 @@ func TestDeleteAuth(t *testing.T) {
 		}
 
 		// create auth.
-		if err := authService.CreateAuth(backgroundCtx, auth2); err != nil {
-			t.Fatal(err)
-		}
-
-		// declare ctx with enriched user.
-		userCtx := pa.NewContextWithUser(backgroundCtx, auth2.User)
+		userCtx := MustCreateAuth(t, db, backgroundCtx, auth2)
 
 		// delete auth (Un Auth).
 		if err := authService.DeleteAuth(userCtx, 1); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
@@ -235,4 +221,34 @@ func TestDeleteAuth(t *testing.T) {
 			t.Fatal("err != ENOTFOUND")
 		}
 	})
+}
+
+func TestFindAuths(t *testing.T) {
+	t.Run("Ok Find Call (filter - id)", func(t *testing.T) {
+
+	})
+
+	t.Run("Ok Find Call (filter - user)", func(t *testing.T) {
+
+	})
+
+	t.Run("Ok Find Call (filter - source)", func(t *testing.T) {
+
+	})
+
+	t.Run("Ok Find Call (filter - sourceID)", func(t *testing.T) {
+
+	})
+
+	t.Run("Bad Find Call (Not Found)", func(t *testing.T) {
+
+	})
+}
+
+func MustCreateAuth(t *testing.T, db *sqlite.DB, ctx context.Context, auth *pa.Auth) context.Context {
+	t.Helper()
+	if err := sqlite.NewAuthService(db).CreateAuth(ctx, auth); err != nil {
+		t.Fatal(err)
+	}
+	return pa.NewContextWithUser(ctx, auth.User)
 }
