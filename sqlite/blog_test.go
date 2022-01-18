@@ -25,7 +25,7 @@ func TestCreateBlog(t *testing.T) {
 			IsAdmin: true,
 		} // no need to create user as CreateBlog doesent check any keys.
 
-		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
 
 		blog := &pa.Blog{
 			Title:       "Epic Blog",
@@ -33,7 +33,7 @@ func TestCreateBlog(t *testing.T) {
 		}
 
 		// create blog.
-		if err := blogService.CreateBlog(adminUsrContext, blog); err != nil {
+		if err := blogService.CreateBlog(adminUsrCtx, blog); err != nil {
 			t.Fatal(err)
 		} else if blog.ID == 0 {
 			t.Fatal("got id = 0")
@@ -56,7 +56,7 @@ func TestCreateBlog(t *testing.T) {
 		defer MustCloseDB(t, db)
 
 		backgroundCtx := context.Background()
-		usrContext := pa.NewContextWithUser(backgroundCtx, &pa.User{
+		usrCtx := pa.NewContextWithUser(backgroundCtx, &pa.User{
 			Name:  "jhon DOE",
 			Email: "jhon@doe.com",
 		}) // no need to create user as CreateBlog doesent check any keys.
@@ -69,7 +69,7 @@ func TestCreateBlog(t *testing.T) {
 		}
 
 		// create blog (Un Auth).
-		if err := blogService.CreateBlog(usrContext, blog); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
+		if err := blogService.CreateBlog(usrCtx, blog); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
 			t.Fatal("expected UnAuth error")
 		} else if blog.ID != 0 {
 			t.Fatal("got id != 0")
@@ -94,7 +94,7 @@ func TestDeleteBlog(t *testing.T) {
 			IsAdmin: true,
 		} // no need to create user as DeleteBlog doesent check any keys.
 
-		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
 
 		blog := &pa.Blog{
 			Title:       "Epic Blog",
@@ -102,10 +102,10 @@ func TestDeleteBlog(t *testing.T) {
 		}
 
 		// create blog.
-		MustCreateBlog(t, db, adminUsrContext, blog)
+		MustCreateBlog(t, db, adminUsrCtx, blog)
 
 		// delete blog.
-		if err := blogService.DeleteBlog(adminUsrContext, 1); err != nil {
+		if err := blogService.DeleteBlog(adminUsrCtx, 1); err != nil {
 			t.Fatal(err)
 		}
 
@@ -134,8 +134,8 @@ func TestDeleteBlog(t *testing.T) {
 			Email: "Lamb@Lambels.com",
 		}
 
-		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
-		user2Context := pa.NewContextWithUser(backgroundCtx, user2)
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
+		usr2Ctx := pa.NewContextWithUser(backgroundCtx, user2)
 
 		blog := &pa.Blog{
 			Title:       "Epic Blog",
@@ -143,10 +143,10 @@ func TestDeleteBlog(t *testing.T) {
 		}
 
 		// create blog.
-		MustCreateBlog(t, db, adminUsrContext, blog)
+		MustCreateBlog(t, db, adminUsrCtx, blog)
 
 		// delete blog.
-		if err := blogService.DeleteBlog(user2Context, 1); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
+		if err := blogService.DeleteBlog(usr2Ctx, 1); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
 			t.Fatal("err != EUNAUTHORIZED")
 		}
 	})
@@ -165,10 +165,10 @@ func TestDeleteBlog(t *testing.T) {
 			IsAdmin: true,
 		} // no need to create user as DeleteBlog doesent check any keys.
 
-		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
 
 		// delete blog (Not Found).
-		if err := blogService.DeleteBlog(adminUsrContext, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
+		if err := blogService.DeleteBlog(adminUsrCtx, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
 			t.Fatal("err != ENOTFOUND")
 		}
 	})
@@ -190,7 +190,7 @@ func TestUpdateBlog(t *testing.T) {
 			IsAdmin: true,
 		} // no need to create user as UpdateBlog doesent check any keys.
 
-		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
 
 		blog := &pa.Blog{
 			Title:       "Epic Blog",
@@ -202,10 +202,10 @@ func TestUpdateBlog(t *testing.T) {
 		}
 
 		// create blog.
-		MustCreateBlog(t, db, adminUsrContext, blog)
+		MustCreateBlog(t, db, adminUsrCtx, blog)
 
 		// update blog.
-		if updatedBlog, err := blogService.UpdateBlog(adminUsrContext, 1, update); err != nil {
+		if updatedBlog, err := blogService.UpdateBlog(adminUsrCtx, 1, update); err != nil {
 			t.Fatal(err)
 		} else if gotBlog, err := blogService.FindBlogByID(backgroundCtx, 1); err != nil { // assert update.
 			t.Fatal(err)
@@ -234,8 +234,8 @@ func TestUpdateBlog(t *testing.T) {
 			Email: "Lamb@Lambels.com",
 		}
 
-		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
-		user2Context := pa.NewContextWithUser(backgroundCtx, user2)
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
+		usr2Ctx := pa.NewContextWithUser(backgroundCtx, user2)
 
 		blog := &pa.Blog{
 			Title:       "Epic Blog",
@@ -247,10 +247,10 @@ func TestUpdateBlog(t *testing.T) {
 		}
 
 		// create blog.
-		MustCreateBlog(t, db, adminUsrContext, blog)
+		MustCreateBlog(t, db, adminUsrCtx, blog)
 
 		// update blog (Un Auth).
-		if _, err := blogService.UpdateBlog(user2Context, 1, update); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
+		if _, err := blogService.UpdateBlog(usr2Ctx, 1, update); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
 			t.Fatal("err != UNAUTHORIZED")
 		}
 	})
@@ -269,7 +269,7 @@ func TestUpdateBlog(t *testing.T) {
 			IsAdmin: true,
 		} // no need to create user as DeleteBlog doesent check any keys.
 
-		adminUsrContext := pa.NewContextWithUser(backgroundCtx, user)
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
 
 		update := pa.BlogUpdate{
 			Title:       NewStringPointer("Bad Blog"),
@@ -277,7 +277,7 @@ func TestUpdateBlog(t *testing.T) {
 		}
 
 		// update blog (Un Auth).
-		if _, err := blogService.UpdateBlog(adminUsrContext, 1, update); pa.ErrorCode(err) != pa.ENOTFOUND {
+		if _, err := blogService.UpdateBlog(adminUsrCtx, 1, update); pa.ErrorCode(err) != pa.ENOTFOUND {
 			t.Fatal("err != ENOTFOUND")
 		}
 	})
