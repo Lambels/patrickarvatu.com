@@ -206,7 +206,161 @@ func TestDeleteComment(t *testing.T) {
 	})
 }
 
+func TestUpdateComment(t *testing.T) {
+	t.Parallel()
+	t.Run("Ok Update Call", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		commentService := sqlite.NewCommentService(db)
+
+		user := &pa.User{
+			Name:    "Patrick",
+			Email:   "patrick@arvatu.com",
+			IsAdmin: true,
+		}
+
+		// create user.
+		adminUsrCtx := MustCreateUser(t, db, backgroundCtx, user)
+
+		blog := &pa.Blog{
+			Title:       "Cool Title",
+			Description: "Idk man",
+		}
+
+		// create blog.
+		MustCreateBlog(t, db, adminUsrCtx, blog)
+
+		subBlog := &pa.SubBlog{
+			BlogID:  blog.ID,
+			Title:   "Cool Sub blog",
+			Content: "idk",
+		}
+
+		// create sub blog.
+		MustCreateSubBlog(t, db, adminUsrCtx, subBlog)
+
+		user2 := &pa.User{
+			Name:  "Lambels",
+			Email: "lamb@lambels.com",
+		}
+
+		// create user.
+		usr2Ctx := MustCreateUser(t, db, backgroundCtx, user2)
+
+		comment := &pa.Comment{
+			SubBlogID: subBlog.ID,
+			Content:   "Cool content",
+		}
+
+		// create comment.
+		MustCreateComment(t, db, usr2Ctx, comment)
+
+		update := pa.CommentUpdate{
+			Content: NewStringPointer("Cool new content"),
+		}
+
+		// update comment.
+		if updatedComment, err := commentService.UpdateComment(adminUsrCtx, comment.ID, update); err != nil {
+			t.Fatal(err)
+		} else if gotComment, err := commentService.FindCommentByID(backgroundCtx, comment.ID); err != nil { // assert update.
+			t.Fatal(err)
+		} else if !reflect.DeepEqual(updatedComment, gotComment) {
+			t.Fatal("DeepEqual: updatedComment != gotComment")
+		}
+	})
+
+	t.Run("Bad Update Call (Un Auth)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		commentService := sqlite.NewCommentService(db)
+
+		user := &pa.User{
+			Name:    "Patrick",
+			Email:   "patrick@arvatu.com",
+			IsAdmin: true,
+		}
+
+		// create user.
+		adminUsrCtx := MustCreateUser(t, db, backgroundCtx, user)
+
+		blog := &pa.Blog{
+			Title:       "Cool Title",
+			Description: "Idk man",
+		}
+
+		// create blog.
+		MustCreateBlog(t, db, adminUsrCtx, blog)
+
+		subBlog := &pa.SubBlog{
+			BlogID:  blog.ID,
+			Title:   "Cool Sub blog",
+			Content: "idk",
+		}
+
+		// create sub blog.
+		MustCreateSubBlog(t, db, adminUsrCtx, subBlog)
+
+		user2 := &pa.User{
+			Name:  "Lambels",
+			Email: "lamb@lambels.com",
+		}
+
+		// create user.
+		usr2Ctx := MustCreateUser(t, db, backgroundCtx, user2)
+
+		comment := &pa.Comment{
+			SubBlogID: subBlog.ID,
+			Content:   "Cool content",
+		}
+
+		// create comment.
+		MustCreateComment(t, db, usr2Ctx, comment)
+
+		update := pa.CommentUpdate{
+			Content: NewStringPointer("Cool new content"),
+		}
+
+		// update comment (Un Auth).
+		if _, err := commentService.UpdateComment(usr2Ctx, comment.ID, update); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
+			t.Fatal("err != EUNAUTHORIZED")
+		}
+	})
+
+	t.Run("Bad Update Call (Not Found)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		commentService := sqlite.NewCommentService(db)
+
+		user := &pa.User{
+			Name:    "Jhon Doe",
+			Email:   "jhon@doe.com",
+			IsAdmin: true,
+		}
+
+		// create user.
+		adminUsrCtx := MustCreateUser(t, db, backgroundCtx, user)
+
+		update := pa.CommentUpdate{
+			Content: NewStringPointer("New Content"),
+		}
+
+		if _, err := commentService.UpdateComment(adminUsrCtx, 1, update); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
+	})
+}
+
 func TestFindComments(t *testing.T) {
+	t.Parallel()
 	t.Run("Ok Find Call (filter - id)", func(t *testing.T) {
 
 	})
