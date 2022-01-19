@@ -224,24 +224,76 @@ func TestDeleteAuth(t *testing.T) {
 }
 
 func TestFindAuths(t *testing.T) {
-	t.Run("Ok Find Call (filter - id)", func(t *testing.T) {
+	t.Parallel()
+	t.Run("Ok Find Call", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
 
-	})
+		backgroundCtx := context.Background()
 
-	t.Run("Ok Find Call (filter - user)", func(t *testing.T) {
+		authService := sqlite.NewAuthService(db)
 
-	})
+		user1 := &pa.User{
+			Name:  "Lambels",
+			Email: "lamb@lambels.com",
+		}
 
-	t.Run("Ok Find Call (filter - source)", func(t *testing.T) {
+		auth1 := &pa.Auth{
+			Source:      "good_source",
+			SourceID:    "good_source_id_1",
+			AccessToken: "some_access_token_1",
+			User:        user1,
+		}
 
-	})
+		MustCreateAuth(t, db, backgroundCtx, auth1)
 
-	t.Run("Ok Find Call (filter - sourceID)", func(t *testing.T) {
+		auth2 := &pa.Auth{
+			Source:      "ok_source",
+			SourceID:    "ok_source_id_1",
+			AccessToken: "some_access_token_2",
+			User:        user1,
+		}
 
+		MustCreateAuth(t, db, backgroundCtx, auth2)
+
+		user2 := &pa.User{
+			Name:  "Patrick",
+			Email: "patrick@arvatu.com",
+		}
+
+		auth3 := &pa.Auth{
+			Source:      "meh_source",
+			SourceID:    "meh_source_id_1",
+			AccessToken: "some_access_token_3",
+			User:        user2,
+		}
+
+		MustCreateAuth(t, db, backgroundCtx, auth3)
+
+		if gotAuths, n, err := authService.FindAuths(backgroundCtx, pa.AuthFilter{UserID: NewIntPointer(1)}); err != nil {
+			t.Fatal(err)
+		} else if len(gotAuths) != 2 {
+			t.Fatalf("len=%v != 2", len(gotAuths))
+		} else if n != 2 {
+			t.Fatalf("n=%v != 2", n)
+		} else if gotAuths[0].SourceID != auth1.SourceID {
+			t.Fatalf("gotAuth SourceID=%v != auth1 SourceID=%v", gotAuths[0].SourceID, auth1.SourceID)
+		} else if gotAuths[1].SourceID != auth2.SourceID {
+			t.Fatalf("gotAuth SourceID=%v != auth1 SourceID=%v", gotAuths[1].SourceID, auth2.SourceID)
+		}
 	})
 
 	t.Run("Bad Find Call (Not Found)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
 
+		backgroundCtx := context.Background()
+
+		authService := sqlite.NewAuthService(db)
+
+		if _, err := authService.FindAuthByID(backgroundCtx, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
 	})
 }
 
