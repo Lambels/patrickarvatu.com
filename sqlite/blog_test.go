@@ -51,6 +51,42 @@ func TestCreateBlog(t *testing.T) {
 		}
 	})
 
+	t.Run("Bad Create Call (Conflict)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		blogService := sqlite.NewBlogService(db)
+
+		user := &pa.User{
+			Name:    "Jhon Doe",
+			Email:   "jhon@doe.com",
+			IsAdmin: true,
+		} // no need to create user as CreateBlog doesent check any keys.
+
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
+
+		blog := &pa.Blog{
+			Title:       "Epic Blog",
+			Description: "Honestly the best blog ever.",
+		}
+
+		blog2 := &pa.Blog{
+			Title:       "Epic Blog",
+			Description: "Honestly the best blog ever.",
+		}
+
+		MustCreateBlog(t, db, adminUsrCtx, blog)
+
+		if err := blogService.CreateBlog(adminUsrCtx, blog2); err == nil {
+			t.Fatal("err == nil")
+		} else {
+			// TODO: parse err to conflict
+			t.Log(err) // UNIQUE constraint failed: blogs.title
+		}
+	})
+
 	t.Run("Bad Create Call (Un Auth)", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
@@ -77,7 +113,6 @@ func TestCreateBlog(t *testing.T) {
 	})
 }
 
-// TODO: add testing for rest of CRUD methods.
 func TestDeleteBlog(t *testing.T) {
 	t.Parallel()
 	t.Run("Ok Delete Call", func(t *testing.T) {
@@ -284,16 +319,54 @@ func TestUpdateBlog(t *testing.T) {
 }
 
 func TestFindBlogs(t *testing.T) {
-	t.Run("Ok Find Call (filter - id)", func(t *testing.T) {
-
-	})
-
 	t.Run("Ok Find Call (filter - title)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
 
+		backgroundCtx := context.Background()
+
+		blogService := sqlite.NewBlogService(db)
+
+		user := &pa.User{
+			Name:    "Jhon Doe",
+			Email:   "jhon@doe.com",
+			IsAdmin: true,
+		} // no need to create user as DeleteBlog doesent check any keys.
+
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
+
+		blog := &pa.Blog{
+			Title: "abc",
+		}
+
+		MustCreateBlog(t, db, adminUsrCtx, blog)
+
+		blog2 := &pa.Blog{
+			Title: "abcdef",
+		}
+
+		MustCreateBlog(t, db, adminUsrCtx, blog2)
+
+		if gotBlogs, n, err := blogService.FindBlogs(backgroundCtx, pa.BlogFilter{Title: NewStringPointer(blog.Title)}); err != nil {
+			t.Fatal(err)
+		} else if len(gotBlogs) != 2 {
+			t.Fatalf("len=%v != 2", len(gotBlogs))
+		} else if n != 2 {
+			t.Fatalf("n=%v != 2", n)
+		}
 	})
 
 	t.Run("Bad Find Call (Not Found)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
 
+		backgroundCtx := context.Background()
+
+		blogService := sqlite.NewBlogService(db)
+
+		if _, err := blogService.FindBlogByID(backgroundCtx, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
 	})
 }
 
