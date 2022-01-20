@@ -77,8 +77,10 @@ func TestCreateBlog(t *testing.T) {
 			Description: "Honestly the best blog ever.",
 		}
 
+		// create blog.
 		MustCreateBlog(t, db, adminUsrCtx, blog)
 
+		// create blog (Conflict).
 		if err := blogService.CreateBlog(adminUsrCtx, blog2); err == nil {
 			t.Fatal("err == nil")
 		} else {
@@ -339,17 +341,20 @@ func TestFindBlogs(t *testing.T) {
 			Title: "abc",
 		}
 
+		// create blog.
 		MustCreateBlog(t, db, adminUsrCtx, blog)
 
 		blog2 := &pa.Blog{
 			Title: "abcdef",
 		}
 
+		// create blog.
 		MustCreateBlog(t, db, adminUsrCtx, blog2)
 
+		// find blogs.
 		if gotBlogs, n, err := blogService.FindBlogs(backgroundCtx, pa.BlogFilter{Title: NewStringPointer(blog.Title)}); err != nil {
 			t.Fatal(err)
-		} else if len(gotBlogs) != 2 {
+		} else if len(gotBlogs) != 2 { // assert find.
 			t.Fatalf("len=%v != 2", len(gotBlogs))
 		} else if n != 2 {
 			t.Fatalf("n=%v != 2", n)
@@ -364,6 +369,7 @@ func TestFindBlogs(t *testing.T) {
 
 		blogService := sqlite.NewBlogService(db)
 
+		// find blog (Not Found).
 		if _, err := blogService.FindBlogByID(backgroundCtx, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
 			t.Fatal("err != ENOTFOUND")
 		}
