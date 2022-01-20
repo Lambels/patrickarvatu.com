@@ -9,8 +9,6 @@ import (
 	"github.com/Lambels/patrickarvatu.com/sqlite"
 )
 
-// TODO: add same comments and variable names.
-
 func TestCreateComment(t *testing.T) {
 	t.Parallel()
 	t.Run("Ok Create Call", func(t *testing.T) {
@@ -361,20 +359,137 @@ func TestUpdateComment(t *testing.T) {
 
 func TestFindComments(t *testing.T) {
 	t.Parallel()
-	t.Run("Ok Find Call (filter - id)", func(t *testing.T) {
-
-	})
-
 	t.Run("Ok Find Call (filter - sub blog)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
 
+		backgroundCtx := context.Background()
+
+		commentService := sqlite.NewCommentService(db)
+
+		user := &pa.User{
+			Name:    "Lambels",
+			Email:   "lamb@lambels.com",
+			IsAdmin: true,
+		}
+
+		// create user.
+		adminUsrCtx := MustCreateUser(t, db, backgroundCtx, user)
+
+		blog := &pa.Blog{
+			Title:       "Cool Title",
+			Description: "Idk man",
+		}
+
+		// create blog.
+		MustCreateBlog(t, db, adminUsrCtx, blog)
+
+		subBlog := &pa.SubBlog{
+			BlogID:  blog.ID,
+			Title:   "Cool Sub blog",
+			Content: "idk",
+		}
+
+		// create sub blog.
+		MustCreateSubBlog(t, db, adminUsrCtx, subBlog)
+
+		comment := &pa.Comment{
+			SubBlogID: subBlog.ID,
+			Content:   "Cool content",
+		}
+
+		// create comment.
+		MustCreateComment(t, db, adminUsrCtx, comment)
+
+		comment2 := &pa.Comment{
+			SubBlogID: subBlog.ID,
+			Content:   "BAd Content",
+		}
+
+		// create comment.
+		MustCreateComment(t, db, adminUsrCtx, comment2)
+
+		// find comments.
+		if gotComments, n, err := commentService.FindComments(backgroundCtx, pa.CommentFilter{SubBlogID: NewIntPointer(subBlog.ID)}); err != nil {
+			t.Fatal(err)
+		} else if len(gotComments) != 2 { // assert find
+			t.Fatalf("len=%v != 2", len(gotComments))
+		} else if n != 2 {
+			t.Fatalf("n=%v != 2", n)
+		}
 	})
 
 	t.Run("Ok Find Call (filter - user)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
 
+		backgroundCtx := context.Background()
+
+		commentService := sqlite.NewCommentService(db)
+
+		user := &pa.User{
+			Name:    "Lambels",
+			Email:   "lamb@lambels.com",
+			IsAdmin: true,
+		}
+
+		// create user.
+		adminUsrCtx := MustCreateUser(t, db, backgroundCtx, user)
+
+		blog := &pa.Blog{
+			Title:       "Cool Title",
+			Description: "Idk man",
+		}
+
+		// create blog.
+		MustCreateBlog(t, db, adminUsrCtx, blog)
+
+		subBlog := &pa.SubBlog{
+			BlogID:  blog.ID,
+			Title:   "Cool Sub blog",
+			Content: "idk",
+		}
+
+		// create sub blog.
+		MustCreateSubBlog(t, db, adminUsrCtx, subBlog)
+
+		comment := &pa.Comment{
+			SubBlogID: subBlog.ID,
+			Content:   "Cool content",
+		}
+
+		// create comment.
+		MustCreateComment(t, db, adminUsrCtx, comment)
+
+		comment2 := &pa.Comment{
+			SubBlogID: subBlog.ID,
+			Content:   "BAd Content",
+		}
+
+		// create comment.
+		MustCreateComment(t, db, adminUsrCtx, comment2)
+
+		// find comments.
+		if gotComments, n, err := commentService.FindComments(backgroundCtx, pa.CommentFilter{UserID: NewIntPointer(user.ID)}); err != nil {
+			t.Fatal(err)
+		} else if len(gotComments) != 2 { // assert find
+			t.Fatalf("len=%v != 2", len(gotComments))
+		} else if n != 2 {
+			t.Fatalf("n=%v != 2", n)
+		}
 	})
 
 	t.Run("Bad Find Call (Not Found)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
 
+		backgroundCtx := context.Background()
+
+		commentService := sqlite.NewCommentService(db)
+
+		if _, err := commentService.FindCommentByID(backgroundCtx, 1); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
 	})
 }
 
