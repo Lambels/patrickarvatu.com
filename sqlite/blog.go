@@ -160,8 +160,8 @@ func findBlogs(ctx context.Context, tx *Tx, filter pa.BlogFilter) (_ []*pa.Blog,
 		args = append(args, *v)
 	}
 	if v := filter.Title; v != nil {
-		where = append(where, "title = ?")
-		args = append(args, *v)
+		where = append(where, "title LIKE ?")
+		args = append(args, "%"+*v+"%")
 	}
 
 	rows, err := tx.QueryContext(ctx, `
