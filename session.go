@@ -11,8 +11,7 @@ const SessionCookieName = "session"
 
 // Session represents data stored per session under a secure cookie.
 type Session struct {
-	UserID      int    `json:"userID"`
-	IsAdmin     bool   `json:"isAdmin"`
-	RedirectURL string `json:"redirectURL"`
-	State       string `json:"state"`
+	UserID  int    `json:"userID"`
+	IsAdmin bool   `json:"isAdmin"`
+	State   string `json:"state"`
 }
