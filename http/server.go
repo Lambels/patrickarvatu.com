@@ -1,6 +1,8 @@
 package http
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -13,6 +15,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/gorilla/securecookie"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
@@ -22,6 +25,7 @@ import (
 // ServerShutdownTime is the time the server allows processes to finish before shuting down
 const ServerShutdownTime = 3 * time.Second
 
+// Server represents a backend api HTTP service which wraps all our HTTP functionality.
 type Server struct {
 	server *http.Server
 	router *chi.Mux
@@ -41,10 +45,10 @@ type Server struct {
 	EventService     pa.EventService
 	SubsctionService pa.SubscriptionService
 
-	// TODO: include github client keys + cookie encription keys
 	conf *pa.Config
 }
 
+// NewServer registers all routes and returns a new server with the conf configurations.
 func NewServer(conf *pa.Config) *Server {
 	s := &Server{
 		server: &http.Server{},
@@ -56,11 +60,14 @@ func NewServer(conf *pa.Config) *Server {
 	s.router.Use(chimw.Logger)
 	s.router.Use(cors.Handler(
 		cors.Options{
-			AllowedOrigins:   []string{"http://localhost:3000"}, // TODO: Make this not hard coded (FrontendURL)
+			AllowedOrigins:   []string{s.conf.HTTP.FrontendURL},
 			AllowedMethods:   []string{http.MethodGet, http.MethodDelete, http.MethodPost, http.MethodOptions, http.MethodPut},
 			AllowCredentials: true,
 		},
 	))
+
+	// set custom not found api handler.
+	s.router.NotFound(s.handleNotFound)
 
 	s.router.Route("/oauth", func(r chi.Router) {
 		s.registerAuthRoutes(r)
@@ -70,6 +77,59 @@ func NewServer(conf *pa.Config) *Server {
 	s.server.Handler = s.router
 
 	return s
+}
+
+// Open validates the configurration and starts the server on the address.
+func (s *Server) Open() error {
+	// validate our providers keys.
+	if s.conf.Github.ClientID == "" {
+		return fmt.Errorf("gtihub client id not set.")
+	} else if s.conf.Github.ClientSecret == "" {
+		return fmt.Errorf("github client secret not set.")
+	}
+
+	// open the secure cookie implementation.
+	if err := s.openSecureCookie(); err != nil {
+		return err
+	}
+
+	// set listener.
+	if s.Domain != "" {
+		s.ln = autocert.NewListener(s.Domain)
+	} else {
+		ln, err := net.Listen("tcp", s.Addr)
+		if err != nil {
+			return err
+		}
+
+		s.ln = ln
+	}
+
+	// start listening with s.ln
+	go s.server.Serve(s.ln)
+
+	return nil
+}
+
+// Close brings the server to a gracefull shutdown.
+func (s *Server) Close() error {
+	cancelCtx, cancel := context.WithTimeout(context.Background(), ServerShutdownTime)
+	defer cancel() // release resources.
+	return s.server.Shutdown(cancelCtx)
+}
+
+// openSecureCookie uses the keys under the config and checks their existance.
+func (s *Server) openSecureCookie() error {
+	// ensure keys are set.
+	if s.conf.HTTP.BlockKey == "" {
+		return fmt.Errorf("block key isnt set.")
+	} else if s.conf.HTTP.HashKey == "" {
+		return fmt.Errorf("hash key isnt set.")
+	}
+
+	s.sc = securecookie.New([]byte(s.conf.HTTP.HashKey), []byte(s.conf.HTTP.BlockKey))
+	s.sc.SetSerializer(securecookie.JSONEncoder{}) // use the json encoder.
+	return nil
 }
 
 // RunDebugServer runs a debug server on port 8000
@@ -87,14 +147,19 @@ func (s *Server) NewOAuthConfig(source string) *oauth2.Config {
 	switch source {
 	case pa.AuthSourceGitHub:
 		return &oauth2.Config{
-			ClientID:     s.conf.GitHubClientID,
-			ClientSecret: s.conf.GithubClientSecret,
+			ClientID:     s.conf.Github.ClientID,
+			ClientSecret: s.conf.Github.ClientSecret,
 			Endpoint:     github.Endpoint,
 		}
 
 	default:
 		return &oauth2.Config{}
 	}
+}
+
+// handleNotFound sends a not found error with the path.
+func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
+	SendError(w, r, pa.Errorf(pa.ENOTFOUND, "%s didnt match with any path.", r.URL.Path))
 }
 
 // cookie geter and seter ----------------------------------------------------
