@@ -83,9 +83,9 @@ func NewServer(conf *pa.Config) *Server {
 func (s *Server) Open() error {
 	// validate our providers keys.
 	if s.conf.Github.ClientID == "" {
-		return fmt.Errorf("gtihub client id not set.")
+		return fmt.Errorf("gtihub client id not set")
 	} else if s.conf.Github.ClientSecret == "" {
-		return fmt.Errorf("github client secret not set.")
+		return fmt.Errorf("github client secret not set")
 	}
 
 	// open the secure cookie implementation.
@@ -122,9 +122,9 @@ func (s *Server) Close() error {
 func (s *Server) openSecureCookie() error {
 	// ensure keys are set.
 	if s.conf.HTTP.BlockKey == "" {
-		return fmt.Errorf("block key isnt set.")
+		return fmt.Errorf("block key isnt set")
 	} else if s.conf.HTTP.HashKey == "" {
-		return fmt.Errorf("hash key isnt set.")
+		return fmt.Errorf("hash key isnt set")
 	}
 
 	s.sc = securecookie.New([]byte(s.conf.HTTP.HashKey), []byte(s.conf.HTTP.BlockKey))
