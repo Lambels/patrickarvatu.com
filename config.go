@@ -13,4 +13,8 @@ type Config struct {
 		HashKey     string `toml:"hash-key"`
 		FrontendURL string `toml:"frontend-url"`
 	} `toml:"http"`
+
+	User struct {
+		AdminUserEmail string `toml:"admin-user-email"`
+	} `toml:"user"`
 }
