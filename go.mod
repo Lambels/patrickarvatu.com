@@ -12,6 +12,8 @@ require (
 	github.com/go-chi/cors v1.2.0 // indirect
 	github.com/go-redis/redis/v8 v8.11.2 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/google/go-github/v32 v32.1.0 // indirect
+	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
