@@ -90,6 +90,7 @@ type UserFilter struct {
 // UserUpdate represents an update used by UpdateUser to update a user.
 type UserUpdate struct {
 	// fields which can be updated.
-	Name  *string `json:"name"`
-	Email *string `json:"email"`
+	Name   *string `json:"name"`
+	Email  *string `json:"email"`
+	ApiKey *string `json:"apiKey"` // TODO: test api key update.
 }
