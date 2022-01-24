@@ -58,6 +58,7 @@ func NewServer(conf *pa.Config) *Server {
 
 	// middleware stack.
 	s.router.Use(chimw.Logger)
+	s.router.Use(s.authentificateMiddleware) // attempt to authentificate each request.
 	s.router.Use(cors.Handler(
 		cors.Options{
 			AllowedOrigins:   []string{s.conf.HTTP.FrontendURL},
@@ -71,6 +72,29 @@ func NewServer(conf *pa.Config) *Server {
 
 	s.router.Route("/oauth", func(r chi.Router) {
 		s.registerAuthRoutes(r)
+	})
+
+	s.router.Route("/users", func(r chi.Router) {
+		r.Use(s.requireAuthMiddleware)
+		s.registerUserRoutes(r)
+	})
+
+	s.router.Route("/blogs", func(r chi.Router) {
+		s.registerBlogRoutes(r)
+	})
+
+	s.router.Route("/sub-blogs", func(r chi.Router) {
+		s.registerSubBlogRoutes(r)
+	})
+
+	s.router.Route("/comments", func(r chi.Router) {
+		r.Use(s.requireAuthMiddleware)
+		s.registerCommentRoutes(r)
+	})
+
+	s.router.Route("/subscriptions", func(r chi.Router) {
+		r.Use(s.requireAuthMiddleware)
+		s.registerSubscriptionRoutes(r)
 	})
 
 	// register router to server with registered routes.
