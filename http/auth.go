@@ -13,13 +13,14 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// registerAuthRoutes registers the auth roles under r.
+// registerAuthRoutes registers the auth routes under r.
 func (s *Server) registerAuthRoutes(r chi.Router) {
 	r.Delete("/logout", s.handleLogout)
 	r.Get("/github", s.handleGithubOAuth)
 	r.Post("/github/callback", s.handleGithubCallback)
 
 	r.Route("/user", func(r chi.Router) {
+		r.Use(s.jsonResponseTypeMiddleware)
 		r.Use(s.requireAuthMiddleware)
 		r.Get("/me", s.handleMe)
 		r.Get("/check-auth", s.handleCheckAuth)
@@ -162,22 +163,18 @@ func (s *Server) handleGithubCallback(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-// userProfileResponse represents a respone from handleMe
-type userProfileResponse struct {
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	APIKey string `json:"apiKey"`
-}
-
 // handleMe handels GET '/oauth/user/me'.
 // returns an userProfileResponse.
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 	user := pa.UserFromContext(r.Context())
 	SendJSON(w,
-		userProfileResponse{
-			Name:   user.Name,
-			Email:  user.Email,
-			APIKey: user.APIKey,
+		getMyUserResponse{
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			APIKey:    user.APIKey,
+			CreatedAt: user.CreatedAt.String(),
+			UpdatedAt: user.UpdatedAt.String(),
 		},
 	)
 }
