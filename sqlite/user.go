@@ -282,6 +282,9 @@ func updateUser(ctx context.Context, tx *Tx, id int, update pa.UserUpdate) (*pa.
 	if v := update.Email; v != nil {
 		user.Email = *v
 	}
+	if v := update.ApiKey; v != nil {
+		user.APIKey = *v
+	}
 
 	user.UpdatedAt = tx.now
 
@@ -299,11 +302,13 @@ func updateUser(ctx context.Context, tx *Tx, id int, update pa.UserUpdate) (*pa.
 		UPDATE users
 		SET name = ?,
 		    email = ?,
+			api_key = ?,
 		    updated_at = ?
 		WHERE id = ?
 	`,
 		user.Name,
 		email,
+		user.APIKey,
 		(*NullTime)(&user.UpdatedAt),
 		id,
 	); err != nil {
