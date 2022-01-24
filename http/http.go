@@ -60,3 +60,80 @@ func LogError(r *http.Request, err error) {
 func SendJSON(w io.Writer, data interface{}) error {
 	return json.NewEncoder(w).Encode(data)
 }
+
+// response and request types ----------------------------
+
+// getMyUserResponse represents a respone from handleMe
+type getMyUserResponse struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	APIKey    string `json:"apiKey"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+}
+
+type getOtherUserResponse struct {
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type getMyProfileResponse struct {
+	User          getMyUserResponse        `json:"user"`
+	Comments      getCommentsResponse      `json:"comments"`
+	Subscriptions getSubscriptionsResponse `json:"subscriptions"`
+}
+
+type getOtherUserProfileResponse struct {
+	User     getOtherUserResponse `json:"user"`
+	Comments getCommentsResponse  `json:"comments"`
+}
+
+type getCommentsResponse struct {
+	N        int           `json:"n"`
+	Comments []*pa.Comment `json:"comments"`
+}
+
+type getSubscriptionsResponse struct {
+	N             int `json:"n"`
+	Subscriptions []struct {
+		ID     int `json:"id"`
+		UserID int `json:"userID"`
+		On     int `json:"on"`
+	} `json:"subscriptions"`
+}
+
+// TODO: test
+func (s *getSubscriptionsResponse) serializeIn(subs ...*pa.Subscription) {
+	// loop over each subscription.
+	for _, sub := range subs {
+		// filter each subscription by type so we can identify each payload
+		switch sub.Topic {
+		case pa.EventTopicNewSubBlog:
+			payload := sub.Payload.(pa.SubBlogPayload)
+			s.Subscriptions = append(s.Subscriptions, struct {
+				ID     int `json:"id"`
+				UserID int `json:"userID"`
+				On     int `json:"on"`
+			}{
+				ID:     sub.ID,
+				UserID: sub.ID,
+				On:     payload.BlogID,
+			})
+
+		case pa.EventTopicNewComment:
+			payload := sub.Payload.(pa.CommentPayload)
+			s.Subscriptions = append(s.Subscriptions, struct {
+				ID     int `json:"id"`
+				UserID int `json:"userID"`
+				On     int `json:"on"`
+			}{
+				ID:     sub.ID,
+				UserID: sub.ID,
+				On:     payload.SubBlogID,
+			})
+
+		}
+	}
+}
