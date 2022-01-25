@@ -18,7 +18,7 @@ patrickarvatu.com isnt yet in production, however it is under active development
 
 # Backend
 - Powered by Golang
-- Architecture layout from [Ben Jhonsons Article](https://github.com/benbjohnson/wtf)
+- Architecture layout from [Ben Johnsons Article](https://github.com/benbjohnson/wtf)
 - Event Service powered by [asynq](https://github.com/hibiken/asynq)
 - CLI start upp powered by [cobra](https://github.com/spf13/cobra)
 
