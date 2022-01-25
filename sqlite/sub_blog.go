@@ -182,10 +182,6 @@ func findSubBlogs(ctx context.Context, tx *Tx, filter pa.SubBlogFilter) (_ []*pa
 			return nil, 0, err
 		}
 
-		if err := attachCommentsToSubBlog(ctx, tx, &subBlog); err != nil {
-			return nil, 0, err
-		}
-
 		subBlogs = append(subBlogs, &subBlog)
 	}
 	if err := rows.Err(); err != nil {
