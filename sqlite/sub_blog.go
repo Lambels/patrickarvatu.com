@@ -173,6 +173,7 @@ func findSubBlogs(ctx context.Context, tx *Tx, filter pa.SubBlogFilter) (_ []*pa
 		if err := rows.Scan(
 			&subBlog.ID,
 			&subBlog.Title,
+			&subBlog.BlogID,
 			&subBlog.Content,
 			(*NullTime)(&subBlog.CreatedAt),
 			(*NullTime)(&subBlog.UpdatedAt),
