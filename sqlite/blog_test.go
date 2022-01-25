@@ -247,7 +247,6 @@ func TestUpdateBlog(t *testing.T) {
 		} else if gotBlog, err := blogService.FindBlogByID(backgroundCtx, 1); err != nil { // assert update.
 			t.Fatal(err)
 		} else if !reflect.DeepEqual(updatedBlog, gotBlog) {
-			t.Log(*updatedBlog, *gotBlog)
 			t.Fatal("DeepEqual: updatedBlog != gotBlog")
 		}
 	})
