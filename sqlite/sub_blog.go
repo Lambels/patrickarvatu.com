@@ -270,7 +270,7 @@ func updateSubBlog(ctx context.Context, tx *Tx, id int, update pa.SubBlogUpdate)
 	`,
 		subBlog.Content,
 		subBlog.Title,
-		subBlog.UpdatedAt,
+		(*NullTime)(&subBlog.UpdatedAt),
 		id,
 	); err != nil {
 		return nil, err
