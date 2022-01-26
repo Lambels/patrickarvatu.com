@@ -166,17 +166,7 @@ func (s *Server) handleGithubCallback(w http.ResponseWriter, r *http.Request) {
 // handleMe handels GET '/oauth/user/me'.
 // returns an userProfileResponse.
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
-	user := pa.UserFromContext(r.Context())
-	SendJSON(w,
-		getMyUserResponse{
-			ID:        user.ID,
-			Name:      user.Name,
-			Email:     user.Email,
-			APIKey:    user.APIKey,
-			CreatedAt: user.CreatedAt.String(),
-			UpdatedAt: user.UpdatedAt.String(),
-		},
-	)
+	SendJSON(w, pa.UserFromContext(r.Context()))
 }
 
 // handleCheckAuth handles GET '/oauth/user/check-auth'.
