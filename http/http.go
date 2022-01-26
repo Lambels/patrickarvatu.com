@@ -63,16 +63,6 @@ func SendJSON(w io.Writer, data interface{}) error {
 
 // response and request types ----------------------------
 
-// getMyUserResponse represents a respone from handleMe
-type getMyUserResponse struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Email     string `json:"email"`
-	APIKey    string `json:"apiKey"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
-}
-
 type getOtherUserResponse struct {
 	Username  string `json:"username"`
 	Email     string `json:"email"`
@@ -80,7 +70,7 @@ type getOtherUserResponse struct {
 }
 
 type getMyProfileResponse struct {
-	User          getMyUserResponse        `json:"user"`
+	User          *pa.User                 `json:"user"`
 	Comments      getCommentsResponse      `json:"comments"`
 	Subscriptions getSubscriptionsResponse `json:"subscriptions"`
 }
@@ -136,4 +126,14 @@ func (s *getSubscriptionsResponse) serializeIn(subs ...*pa.Subscription) {
 
 		}
 	}
+}
+
+type getSubBlogsResponse struct {
+	N        int           `json:"n"`
+	SubBlogs []*pa.SubBlog `json:"subBlogs"`
+}
+
+type getBlogsResponse struct {
+	N     int        `json:"n"`
+	Blogs []*pa.Blog `json:"blogs"`
 }
