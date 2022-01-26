@@ -23,7 +23,7 @@ func (s *Server) registerUserRoutes(r chi.Router) {
 func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "userID"))
 	if err != nil {
-		SendError(w, r, err)
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid id format"))
 		return
 	}
 
@@ -54,7 +54,7 @@ func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleUserProfile(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "userID"))
 	if err != nil {
-		SendError(w, r, err)
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid id format"))
 		return
 	}
 
@@ -99,14 +99,7 @@ func (s *Server) handleUserProfile(w http.ResponseWriter, r *http.Request) {
 
 		// build response.
 		var response getMyProfileResponse
-		response.User = getMyUserResponse{
-			ID:        user.ID,
-			Name:      user.Email,
-			Email:     user.Email,
-			APIKey:    user.APIKey,
-			CreatedAt: user.CreatedAt.String(),
-			UpdatedAt: user.UpdatedAt.String(),
-		}
+		response.User = user
 
 		response.Comments = getCommentsResponse{
 			N:        nComments,
@@ -142,7 +135,7 @@ func (s *Server) handleUserProfile(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleRefreshApiKey(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "userID"))
 	if err != nil {
-		SendError(w, r, err)
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid id format"))
 		return
 	}
 
@@ -163,14 +156,7 @@ func (s *Server) handleRefreshApiKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send response with updated user.
-	SendJSON(w, getMyUserResponse{
-		ID:        user.ID,
-		Name:      user.Email,
-		Email:     user.Email,
-		APIKey:    user.APIKey,
-		CreatedAt: user.CreatedAt.String(),
-		UpdatedAt: user.UpdatedAt.String(),
-	})
+	SendJSON(w, user)
 }
 
 // handleDeleteUser handels DELETE '/users/{userID}'.
@@ -178,7 +164,7 @@ func (s *Server) handleRefreshApiKey(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "userID"))
 	if err != nil {
-		SendError(w, r, err)
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid id format"))
 		return
 	}
 
