@@ -112,6 +112,17 @@ func (s *Server) handleCreateSubBlog(w http.ResponseWriter, r *http.Request) {
 		SendError(w, r, err)
 		return
 	}
+
+	// push event.
+	if err := s.publishNewEvent(r.Context(), pa.Event{
+		Topic: pa.EventTopicNewSubBlog,
+		Payload: pa.SubBlogPayload{
+			BlogID: subBlog.BlogID, // attach blog id to payload for easy redirect.
+		},
+	}); err != nil {
+		SendError(w, r, err)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
 }
 
