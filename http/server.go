@@ -181,6 +181,11 @@ func (s *Server) NewOAuthConfig(source string) *oauth2.Config {
 	}
 }
 
+// publishNewEvent is a helper function to push an event on the event queue.
+func (s *Server) publishNewEvent(ctx context.Context, event pa.Event) error {
+	return s.EventService.Push(ctx, event)
+}
+
 // handleNotFound sends a not found error with the path.
 func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
 	SendError(w, r, pa.Errorf(pa.ENOTFOUND, "%s didnt match with any path.", r.URL.Path))
