@@ -32,7 +32,7 @@ func (s *Server) handleGetSubBlogs(w http.ResponseWriter, r *http.Request) {
 	var filter pa.SubBlogFilter
 
 	param := chi.URLParam(r, "blogID")
-	if param != "" { // we have a sub blog id param
+	if param != "" { // we have a blog id param
 		id, err := strconv.Atoi(param)
 		if err != nil {
 			SendError(w, r, pa.Errorf(pa.EINVALID, "invalid id format"))
@@ -98,7 +98,7 @@ func (s *Server) handleGetSubBlog(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleCreateSubBlog handels POST '/sub-blogs/'
-// creates a sub blog with the request body.
+// creates a sub blog with the request body and pushes a pa.EventTopicNewSubBlog -> ./event.go.
 func (s *Server) handleCreateSubBlog(w http.ResponseWriter, r *http.Request) {
 	var subBlog pa.SubBlog
 	// decode body.
@@ -117,7 +117,7 @@ func (s *Server) handleCreateSubBlog(w http.ResponseWriter, r *http.Request) {
 	if err := s.publishNewEvent(r.Context(), pa.Event{
 		Topic: pa.EventTopicNewSubBlog,
 		Payload: pa.SubBlogPayload{
-			BlogID: subBlog.BlogID, // attach blog id to payload for easy redirect.
+			BlogID: subBlog.BlogID, // attach only blog id to payload for easy redirect.
 		},
 	}); err != nil {
 		SendError(w, r, err)
@@ -154,7 +154,7 @@ func (s *Server) handleUpdateSubBlog(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleDeleteSubBlog handels DELETE '/sub-blogs/{subBlogID}'
-// permanently deletes the user pointed to by subBlogID.
+// permanently deletes the sub blog pointed to by subBlogID.
 func (s *Server) handleDeleteSubBlog(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "subBlogID"))
 	if err != nil {
