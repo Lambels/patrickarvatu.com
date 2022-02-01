@@ -82,7 +82,7 @@ func (s *Server) handleUserProfile(w http.ResponseWriter, r *http.Request) {
 		// subscription filter with new sub blog topic.
 		v := pa.EventTopicNewSubBlog
 		subFilter.Topic = &v
-		blogSubscriptions, nBlogSubs, err := s.SubsctionService.FindSubscriptions(r.Context(), subFilter)
+		blogSubscriptions, nBlogSubs, err := s.SubscriptionService.FindSubscriptions(r.Context(), subFilter)
 		if err != nil {
 			SendError(w, r, err)
 			return
@@ -91,7 +91,7 @@ func (s *Server) handleUserProfile(w http.ResponseWriter, r *http.Request) {
 		// subscription filter with new comment topic.
 		v = pa.EventTopicNewComment
 		subFilter.Topic = &v
-		subBlogSubscriptions, nSubBlogSubs, err := s.SubsctionService.FindSubscriptions(r.Context(), subFilter)
+		subBlogSubscriptions, nSubBlogSubs, err := s.SubscriptionService.FindSubscriptions(r.Context(), subFilter)
 		if err != nil {
 			SendError(w, r, err)
 			return

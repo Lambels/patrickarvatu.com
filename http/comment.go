@@ -121,7 +121,7 @@ func (s *Server) handleCreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create subscription.
-	if err := s.SubsctionService.CreateSubscription(r.Context(), &pa.Subscription{
+	if err := s.SubscriptionService.CreateSubscription(r.Context(), &pa.Subscription{
 		Topic: pa.EventTopicNewComment, // user id gets allocated by create subscription so we save an allocation, create subscription
 		Payload: pa.CommentPayload{ // is only accesable by auth users.
 			SubBlogID: comment.SubBlogID,
@@ -198,7 +198,7 @@ func (s *Server) handleDeleteComment(w http.ResponseWriter, r *http.Request) {
 
 	} else if len(comments) == 0 { // we have no more comments on sub blog.
 		// delete subscription if exists.
-		if subs, _, err := s.SubsctionService.FindSubscriptions(r.Context(), pa.SubscriptionFilter{ // check for subscription on sub blog.
+		if subs, _, err := s.SubscriptionService.FindSubscriptions(r.Context(), pa.SubscriptionFilter{ // check for subscription on sub blog.
 			UserID: &uID,
 			Payload: pa.CommentPayload{
 				SubBlogID: comment.SubBlogID,
@@ -208,7 +208,7 @@ func (s *Server) handleDeleteComment(w http.ResponseWriter, r *http.Request) {
 			return
 		} else if len(subs) == 1 { // 1 user can only have 1 subscription on 1 comment.
 			// delete subscription.
-			if err := s.SubsctionService.DeleteSubscription(r.Context(), subs[0].ID, subs[0].Topic); err != nil {
+			if err := s.SubscriptionService.DeleteSubscription(r.Context(), subs[0].ID, subs[0].Topic); err != nil {
 				SendError(w, r, err)
 				return
 			}

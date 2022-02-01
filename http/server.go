@@ -37,13 +37,13 @@ type Server struct {
 	Domain string
 
 	// Services used by the http package.
-	AuthService      pa.AuthService
-	UserService      pa.UserService
-	BlogService      pa.BlogService
-	SuBlogService    pa.SubBlogService
-	CommentService   pa.CommentService
-	EventService     pa.EventService
-	SubsctionService pa.SubscriptionService
+	AuthService         pa.AuthService
+	UserService         pa.UserService
+	BlogService         pa.BlogService
+	SuBlogService       pa.SubBlogService
+	CommentService      pa.CommentService
+	EventService        pa.EventService
+	SubscriptionService pa.SubscriptionService
 
 	conf *pa.Config
 }
