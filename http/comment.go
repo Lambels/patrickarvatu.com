@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// registerCommentRoutes registers the comment routes under r.
 func (s *Server) registerCommentRoutes(r chi.Router) {
 	r.Get("/", s.handleGetComments)
 	r.Get("/{commentID}", s.handleGetComment)
@@ -158,6 +159,8 @@ func (s *Server) handleUpdateComment(w http.ResponseWriter, r *http.Request) {
 	// send response.
 	SendJSON(w, comment)
 }
+
+// TODO: revise code
 
 // handleDeleteComment handels DELETE '/comments/{commentID}'
 // permanently deletes the comment pointed to by commentID and deletes any existing subscription on the sub blog on which
