@@ -20,8 +20,6 @@ import (
 	"golang.org/x/oauth2/github"
 )
 
-// TODO: publish event after sql creation
-
 // ServerShutdownTime is the time the server allows processes to finish before shuting down
 const ServerShutdownTime = 3 * time.Second
 
