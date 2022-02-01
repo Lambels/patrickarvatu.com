@@ -6,15 +6,17 @@ patrickarvatu.com isnt yet in production, however it is under active development
 
 ### Things Done:
 - SQL logic implemented.
-- implement sql code in sql package
+- Implement sql code in [sql package](https://github.com/Lambels/patrickarvatu.com/tree/master/sqlite)
+- HTTP exposure to the [sql package](https://github.com/Lambels/patrickarvatu.com/tree/master/sqlite)
+- OAuth github implementation
 - Event Service implemented using [asynq](https://github.com/hibiken/asynq)
 
 ### TODO:
 - CLI start upp
-- http exposure to the sql package
 - FRONTEND
-- OAuth github implementation
 - Near future: Support more OAuth providers
+- Write tests: [sql package](https://github.com/Lambels/patrickarvatu.com/tree/master/sqlite)
+- Write tests: [http package](https://github.com/Lambels/patrickarvatu.com/tree/master/http)
 
 # Backend
 - Powered by Golang
