@@ -17,4 +17,17 @@ type Config struct {
 	User struct {
 		AdminUserEmail string `toml:"admin-user-email"`
 	} `toml:"user"`
+
+	Database struct {
+		SqliteDSN string `toml:"sqlite-dsn"`
+		RedisDSN  string `toml:"redis-dsn"`
+	} `toml:"database"`
+
+	Smtp struct {
+		Addr     string `toml:"addr"`
+		Identity string `toml:"identity"`
+		Username string `toml:"username"`
+		Password string `toml:"password"`
+		Host     string `toml:"host"`
+	} `toml:"smtp"`
 }
