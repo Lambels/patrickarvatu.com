@@ -197,12 +197,12 @@ func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
 // returns an empty session on error.
 func (s *Server) getSession(r *http.Request) (ses *pa.Session, err error) {
 	c, err := r.Cookie(pa.SessionCookieName)
-	if err != nil {
-		return ses, err
+	if err != nil { // simply return an empty session if cookie isnt present.
+		return &pa.Session{}, nil
 	}
 
 	if err := s.sc.Decode(pa.SessionCookieName, c.Value, ses); err != nil {
-		return ses, err
+		return &pa.Session{}, err
 	}
 	return ses, nil
 }
