@@ -21,8 +21,8 @@ func TestEventService(t *testing.T) {
 	t.Run("Register Handlers", func(t *testing.T) {
 		// Wont use ctx and hand for tests
 		s.RegisterHandler(pa.EventTopicNewSubBlog, func(_ context.Context, _ pa.SubscriptionService, event pa.Event) error {
-			payload := new(pa.SubBlogPayload)
-			if err := json.Unmarshal(event.Payload.([]byte), payload); err != nil {
+			var payload pa.CommentPayload
+			if err := json.Unmarshal(event.Payload.([]byte), &payload); err != nil {
 				t.Fatal(err)
 			}
 
