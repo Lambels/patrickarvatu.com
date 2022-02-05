@@ -65,7 +65,7 @@ func (s *Server) handleGetSubBlogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch data from database.
-	subBlogs, n, err := s.SuBlogService.FindSubBlogs(r.Context(), filter)
+	subBlogs, n, err := s.SubBlogService.FindSubBlogs(r.Context(), filter)
 	if err != nil {
 		SendError(w, r, err)
 		return
@@ -87,7 +87,7 @@ func (s *Server) handleGetSubBlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// fetch sub blog from database.
-	subBlog, err := s.SuBlogService.FindSubBlogByID(r.Context(), id)
+	subBlog, err := s.SubBlogService.FindSubBlogByID(r.Context(), id)
 	if err != nil {
 		SendError(w, r, err)
 		return
@@ -108,7 +108,7 @@ func (s *Server) handleCreateSubBlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create sub blog.
-	if err := s.SuBlogService.CreateSubBlog(r.Context(), &subBlog); err != nil {
+	if err := s.SubBlogService.CreateSubBlog(r.Context(), &subBlog); err != nil {
 		SendError(w, r, err)
 		return
 	}
@@ -143,7 +143,7 @@ func (s *Server) handleUpdateSubBlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// update sub blog.
-	subBlog, err := s.SuBlogService.UpdateSubBlog(r.Context(), id, update)
+	subBlog, err := s.SubBlogService.UpdateSubBlog(r.Context(), id, update)
 	if err != nil {
 		SendError(w, r, err)
 		return
@@ -163,7 +163,7 @@ func (s *Server) handleDeleteSubBlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete sub blog.
-	if err := s.SuBlogService.DeleteSubBlog(r.Context(), id); err != nil {
+	if err := s.SubBlogService.DeleteSubBlog(r.Context(), id); err != nil {
 		SendError(w, r, err)
 		return
 	}
