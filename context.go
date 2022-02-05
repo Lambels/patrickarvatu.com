@@ -16,7 +16,8 @@ func NewContextWithUser(ctx context.Context, user *User) context.Context {
 
 // UserFromContext pulls the user from context ctx.
 func UserFromContext(ctx context.Context) *User {
-	return ctx.Value(userContextKey).(*User)
+	usr, _ := ctx.Value(userContextKey).(*User)
+	return usr
 }
 
 // UserIDFromContext is a helper function which returns only the id of the user under ctx.
@@ -30,5 +31,8 @@ func UserIDFromContext(ctx context.Context) int {
 
 // IsAdminContext is a helper function to check if context: ctx is an admin context.
 func IsAdminContext(ctx context.Context) bool {
-	return ctx.Value(userContextKey).(*User).IsAdmin
+	if usr := UserFromContext(ctx); usr != nil {
+		return usr.IsAdmin
+	}
+	return false
 }
