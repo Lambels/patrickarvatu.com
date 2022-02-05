@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -38,10 +39,11 @@ type Server struct {
 	AuthService         pa.AuthService
 	UserService         pa.UserService
 	BlogService         pa.BlogService
-	SuBlogService       pa.SubBlogService
+	SubBlogService      pa.SubBlogService
 	CommentService      pa.CommentService
 	EventService        pa.EventService
 	SubscriptionService pa.SubscriptionService
+	EmailService        pa.EmailService
 
 	conf *pa.Config
 }
@@ -312,4 +314,116 @@ func (s *Server) requireNoAuthMiddleware(next http.Handler) http.Handler {
 
 		SendError(w, r, pa.Errorf(pa.EUNAUTHORIZED, "user is auth."))
 	})
+}
+
+// Event Handlers -----------------------------------------------------------------
+
+// HandleCommentEvent handels the pa.EventTopicNewComment -> ./event.go.
+// sends an email to all subscribers.
+func (s *Server) HandleCommentEvent(ctx context.Context, hand pa.SubscriptionService, event pa.Event) error {
+	var payload pa.CommentPayload
+	if err := json.Unmarshal(event.Payload.([]byte), &payload); err != nil {
+		log.Println("[UnMarshalError] err: ", err.Error())
+		return err
+	}
+
+	v := pa.EventTopicNewComment
+	subs, _, err := hand.FindSubscriptions(ctx, pa.SubscriptionFilter{
+		Topic:   &v,
+		Payload: payload,
+	})
+	if err != nil {
+		log.Println("[FindSubscriptions] err: ", err.Error())
+		return err
+	} else if len(subs) == 0 { // no subscriptions.
+		return fmt.Errorf("no subscriptions found")
+	}
+
+	// add recievers.
+	var to []string
+	for _, sub := range subs {
+		usr, err := s.UserService.FindUserByID(ctx, sub.UserID)
+		if err != nil {
+			log.Println("[FindUserByID] err: ", err.Error())
+			continue
+		}
+
+		// if user has attached email add him in to.
+		if usr.Email != "" {
+			to = append(to, usr.Email)
+		}
+	}
+
+	// we have reciepients.
+	if len(to) != 0 {
+		subBlog, err := s.SubBlogService.FindSubBlogByID(ctx, payload.SubBlogID)
+		if err != nil {
+			log.Println("[FindSubBlogByID] err: ", err.Error())
+			return err
+		}
+
+		if err := s.EmailService.SendEmail(to,
+			fmt.Sprintf("There's been a new comment on %s, go check it out! %s", subBlog.Title, s.conf.HTTP.FrontendURL+"/sub-blog/"+fmt.Sprint(subBlog.ID)),
+			fmt.Sprintf("New Comment On %s", subBlog.Title),
+		); err != nil {
+			log.Println("[SendEmail] err: ", err.Error())
+			return err
+		}
+	}
+	return nil
+}
+
+// HandleSubBlogtEvent handels the pa.EventTopicNewSubBlog -> ./event.go.
+// sends an email to all subscribers.
+func (s *Server) HandleSubBlogEvent(ctx context.Context, hand pa.SubscriptionService, event pa.Event) error {
+	var payload pa.SubBlogPayload
+	if err := json.Unmarshal(event.Payload.([]byte), &payload); err != nil {
+		log.Println("[UnMarshalError] err: ", err.Error())
+		return err
+	}
+
+	v := pa.EventTopicNewSubBlog
+	subs, _, err := hand.FindSubscriptions(ctx, pa.SubscriptionFilter{
+		Topic:   &v,
+		Payload: payload,
+	})
+	if err != nil {
+		log.Println("[FindSubscriptions] err: ", err.Error())
+		return err
+	} else if len(subs) == 0 { // no subscriptions.
+		return fmt.Errorf("no subscriptions found")
+	}
+
+	// add recievers.
+	var to []string
+	for _, sub := range subs {
+		usr, err := s.UserService.FindUserByID(ctx, sub.UserID)
+		if err != nil {
+			log.Println("[FindUserByID] err: ", err.Error())
+			continue
+		}
+
+		// if user has attached email add him in to.
+		if usr.Email != "" {
+			to = append(to, usr.Email)
+		}
+	}
+
+	// we have reciepients.
+	if len(to) != 0 {
+		blog, err := s.BlogService.FindBlogByID(ctx, payload.BlogID)
+		if err != nil {
+			log.Println("[FindBlogByID] err: ", err.Error())
+			return err
+		}
+
+		if err := s.EmailService.SendEmail(to,
+			fmt.Sprintf("There's been a new article on %s, go check it out! %s", blog.Title, s.conf.HTTP.FrontendURL+"/blog/"+fmt.Sprint(blog.ID)),
+			fmt.Sprintf("New Article On %s", blog.Title),
+		); err != nil {
+			log.Println("[SendEmail] err: ", err.Error())
+			return err
+		}
+	}
+	return nil
 }
