@@ -2,32 +2,32 @@ package pa
 
 type Config struct {
 	Github struct {
-		ClientID     string `toml:"client-id"`
-		ClientSecret string `toml:"client-secret"`
-	} `toml:"github"`
+		ClientID     string `mapstructure:"client-id"`
+		ClientSecret string `mapstructure:"client-secret"`
+	} `mapstructure:"github"`
 
 	HTTP struct {
-		Addr        string `toml:"addr"`
-		Domain      string `toml:"domain"`
-		BlockKey    string `toml:"block-key"`
-		HashKey     string `toml:"hash-key"`
-		FrontendURL string `toml:"frontend-url"`
-	} `toml:"http"`
+		Addr        string `mapstructure:"addr"`
+		Domain      string `mapstructure:"domain"`
+		BlockKey    string `mapstructure:"block-key"`
+		HashKey     string `mapstructure:"hash-key"`
+		FrontendURL string `mapstructure:"frontend-url"`
+	} `mapstructure:"http"`
 
 	User struct {
-		AdminUserEmail string `toml:"admin-user-email"`
-	} `toml:"user"`
+		AdminUserEmail string `mapstructure:"admin-user-email"`
+	} `mapstructure:"user"`
 
 	Database struct {
-		SqliteDSN string `toml:"sqlite-dsn"`
-		RedisDSN  string `toml:"redis-dsn"`
-	} `toml:"database"`
+		SqliteDSN string `mapstructure:"sqlite-dsn"`
+		RedisDSN  string `mapstructure:"redis-dsn"`
+	} `mapstructure:"database"`
 
 	Smtp struct {
-		Addr     string `toml:"addr"`
-		Identity string `toml:"identity"`
-		Username string `toml:"username"`
-		Password string `toml:"password"`
-		Host     string `toml:"host"`
-	} `toml:"smtp"`
+		Addr     string `mapstructure:"addr"`
+		Identity string `mapstructure:"identity"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
+		Host     string `mapstructure:"host"`
+	} `mapstructure:"smtp"`
 }
