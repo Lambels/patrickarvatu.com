@@ -1,6 +1,7 @@
 .DS_Store
 *.exe
 *.conf
+*.toml
 *.db
 *.db-shm
 *.db-wal
