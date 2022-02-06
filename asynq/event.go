@@ -27,8 +27,7 @@ func NewEventService(redisDSN string) *EventService {
 
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{
-			Addr:     redisDSN,
-			Password: "",
+			Addr: redisDSN,
 		},
 		asynq.Config{
 			Concurrency: 10,
@@ -39,8 +38,7 @@ func NewEventService(redisDSN string) *EventService {
 
 	client := asynq.NewClient(
 		asynq.RedisClientOpt{
-			Addr:     redisDSN,
-			Password: "",
+			Addr: redisDSN,
 		},
 	)
 
@@ -50,7 +48,7 @@ func NewEventService(redisDSN string) *EventService {
 }
 
 func (e *EventService) Open() error {
-	return e.worker.Run(e.mux)
+	return e.worker.Start(e.mux)
 }
 
 func (e *EventService) Close() error {
