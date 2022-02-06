@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	pa "github.com/Lambels/patrickarvatu.com"
 	"github.com/Lambels/patrickarvatu.com/asynq"
 	"github.com/Lambels/patrickarvatu.com/http"
@@ -79,14 +81,17 @@ func initializeServer(cfg *pa.Config) (*http.Server, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	log.Println("[DEBUG] Connected to db.")
 
 	evSrv, clnUpEvSrv, err := newEventService(cfg)
 	if err != nil {
 		clnUpDB()
 		return nil, nil, err
 	}
+	log.Println("[DEBUG] Initialized event service.")
 
 	emSrv := newEmailService(cfg)
+	log.Println("[DEBUG] Initialized email service.")
 
 	auSrv := sqlite.NewAuthService(db)
 	usSrv := sqlite.NewUserService(db)
@@ -94,6 +99,7 @@ func initializeServer(cfg *pa.Config) (*http.Server, func(), error) {
 	sbSrv := sqlite.NewSubBlogService(db)
 	cmSrv := sqlite.NewCommentService(db)
 	subSrv := sqlite.NewSubscriptionService(db)
+	log.Println("[DEBUG] Started database services.")
 
 	serv, clnUpServ, err := newServer(
 		cfg,
@@ -110,6 +116,7 @@ func initializeServer(cfg *pa.Config) (*http.Server, func(), error) {
 		clnUpDB()
 		clnUpEvSrv()
 	}
+	log.Println("[INFO] Started server on address", serv.Addr)
 
 	return serv, func() {
 		clnUpDB()
