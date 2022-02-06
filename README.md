@@ -10,9 +10,9 @@ patrickarvatu.com isnt yet in production, however it is under active development
 - HTTP exposure to the [sql package](https://github.com/Lambels/patrickarvatu.com/tree/master/sqlite)
 - OAuth github implementation
 - Event Service implemented using [asynq](https://github.com/hibiken/asynq)
+- CLI start upp
 
 ### TODO:
-- CLI start upp
 - FRONTEND
 - Near future: Support more OAuth providers
 - Write tests: [sql package](https://github.com/Lambels/patrickarvatu.com/tree/master/sqlite)
