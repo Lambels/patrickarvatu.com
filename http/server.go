@@ -135,6 +135,11 @@ func (s *Server) Open() error {
 	return nil
 }
 
+// UseTLS retruns true if cert + key file found.
+func (s *Server) UseTLS() bool {
+	return s.Domain != ""
+}
+
 // Close brings the server to a gracefull shutdown.
 func (s *Server) Close() error {
 	cancelCtx, cancel := context.WithTimeout(context.Background(), ServerShutdownTime)
@@ -218,7 +223,8 @@ func (s *Server) setSession(w http.ResponseWriter, ses *pa.Session) error {
 		Name:     pa.SessionCookieName,
 		Value:    v,
 		Path:     "/",
-		Secure:   true,
+		Secure:   s.UseTLS(),
+		Domain:   s.Domain, // pass cookie to all sub domains including frontend and api.
 		HttpOnly: true,
 	})
 	return nil
