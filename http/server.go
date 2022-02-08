@@ -200,20 +200,20 @@ func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
 
 // getSession returns a pa.Session from r.
 // returns an empty session on error.
-func (s *Server) getSession(r *http.Request) (ses *pa.Session, err error) {
+func (s *Server) getSession(r *http.Request) (ses pa.Session, err error) {
 	c, err := r.Cookie(pa.SessionCookieName)
 	if err != nil { // simply return an empty session if cookie isnt present.
-		return &pa.Session{}, nil
+		return pa.Session{}, nil
 	}
 
 	if err := s.sc.Decode(pa.SessionCookieName, c.Value, ses); err != nil {
-		return &pa.Session{}, err
+		return pa.Session{}, err
 	}
 	return ses, nil
 }
 
 // setSession sets ses on w using the securecookie service.
-func (s *Server) setSession(w http.ResponseWriter, ses *pa.Session) error {
+func (s *Server) setSession(w http.ResponseWriter, ses pa.Session) error {
 	v, err := s.sc.Encode(pa.SessionCookieName, ses)
 	if err != nil {
 		return err

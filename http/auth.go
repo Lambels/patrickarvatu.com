@@ -31,7 +31,7 @@ func (s *Server) registerAuthRoutes(r chi.Router) {
 // sets an empty session with no user id indicating an unauth request.
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	// clear session.
-	if err := s.setSession(w, &pa.Session{}); err != nil {
+	if err := s.setSession(w, pa.Session{}); err != nil {
 		SendError(w, r, err)
 		return
 	}

@@ -172,7 +172,7 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	if err := s.UserService.DeleteUser(r.Context(), id); err != nil {
 		SendError(w, r, err)
 		return
-	} else if err := s.setSession(w, &pa.Session{}); err != nil {
+	} else if err := s.setSession(w, pa.Session{}); err != nil {
 		SendError(w, r, err)
 		return
 	}
