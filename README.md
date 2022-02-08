@@ -25,4 +25,6 @@ patrickarvatu.com isnt yet in production, however it is under active development
 - CLI start upp powered by [cobra](https://github.com/spf13/cobra)
 
 # Frontend
-- Not implemented
+- Built with react.js
+- Using next.js on top of react.js
+- Styling done with tailwind css
