@@ -70,29 +70,29 @@ func NewServer(conf *pa.Config) *Server {
 	// set custom not found api handler.
 	s.router.NotFound(s.handleNotFound)
 
-	s.router.Route("/oauth", func(r chi.Router) {
+	s.router.Route("/v1/oauth", func(r chi.Router) {
 		s.registerAuthRoutes(r)
 	})
 
-	s.router.Route("/users", func(r chi.Router) {
+	s.router.Route("/v1/users", func(r chi.Router) {
 		r.Use(s.requireAuthMiddleware)
 		s.registerUserRoutes(r)
 	})
 
-	s.router.Route("/blogs", func(r chi.Router) {
+	s.router.Route("/v1/blogs", func(r chi.Router) {
 		s.registerBlogRoutes(r)
 	})
 
-	s.router.Route("/sub-blogs", func(r chi.Router) {
+	s.router.Route("/v1/sub-blogs", func(r chi.Router) {
 		s.registerSubBlogRoutes(r)
 	})
 
-	s.router.Route("/comments", func(r chi.Router) {
+	s.router.Route("/v1/comments", func(r chi.Router) {
 		r.Use(s.requireAuthMiddleware)
 		s.registerCommentRoutes(r)
 	})
 
-	s.router.Route("/subscriptions", func(r chi.Router) {
+	s.router.Route("/v1/subscriptions", func(r chi.Router) {
 		r.Use(s.requireAuthMiddleware)
 		s.registerSubscriptionRoutes(r)
 	})
