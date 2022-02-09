@@ -1,15 +1,18 @@
+import { useRouter } from "next/router";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext({
   user: undefined,
   isAuth: false,
   logout: () => {},
+  redirectToProvider: () => {},
   updateUser: () => {},
 });
 
 function AuthProvider({ children }) {
   const [user, setUser] = useState({});
   const [isAuth, setIsAuth] = useState(false);
+  const router = useRouter()
 
   useEffect(() => {
     updateUser()
@@ -20,9 +23,13 @@ function AuthProvider({ children }) {
       method: "DELETE",
       credentials: "include",
     }).then((response) => {
-      setIsAuth(!response.ok);
+      if (response.ok) setIsAuth(false)
     });
   };
+
+  const redirectToProvider = (provider) => {
+    router.push(`${process.env.NEXT_PUBLIC_API_URL}/v1/oauth/${provider}`)
+  }
 
   const updateUser = () => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/oauth/user/me`, {
@@ -32,7 +39,7 @@ function AuthProvider({ children }) {
         if (!response.ok) return
         response.json()
     }).then((data) => {
-        setUser(data.user)
+        setUser(data?.user)
     })
   }
 
@@ -42,6 +49,7 @@ function AuthProvider({ children }) {
         user: user,
         isAuth: isAuth,
         logout: logout,
+        redirectToProvider: redirectToProvider,
         updateUser: updateUser,
       }}
     >
@@ -52,6 +60,6 @@ function AuthProvider({ children }) {
 
 export default AuthProvider
 
-function useAuth() {
+export function useAuth() {
   return useContext(AuthContext);
 }
