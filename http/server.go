@@ -224,7 +224,7 @@ func (s *Server) setSession(w http.ResponseWriter, ses pa.Session) error {
 		Value:    v,
 		Path:     "/",
 		Secure:   s.UseTLS(),
-		Domain:   s.Domain, // pass cookie to all sub domains including frontend and api.
+		Domain:   "http://localhost", // pass cookie to all sub domains including frontend and api.
 		HttpOnly: true,
 	})
 	return nil
