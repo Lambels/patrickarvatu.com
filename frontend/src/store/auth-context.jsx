@@ -12,36 +12,39 @@ const AuthContext = createContext({
 function AuthProvider({ children }) {
   const [user, setUser] = useState({});
   const [isAuth, setIsAuth] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
-    updateUser()
-  }, [])
+    console.log("anything");
+    updateUser();
+  }, []);
 
   const logout = () => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/oauth/user/logout`, {
       method: "DELETE",
       credentials: "include",
     }).then((response) => {
-      if (response.ok) setIsAuth(false)
+      if (response.ok) setIsAuth(false);
     });
   };
 
   const redirectToProvider = (provider) => {
-    router.push(`${process.env.NEXT_PUBLIC_API_URL}/v1/oauth/${provider}`)
-  }
+    router.push(`${process.env.NEXT_PUBLIC_API_URL}/v1/oauth/${provider}`);
+  };
 
   const updateUser = () => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/oauth/user/me`, {
-        method: "GET",
-        credentials: "include",
-    }).then((response) => {
-        if (!response.ok) return
-        response.json()
-    }).then((data) => {
-        setUser(data?.user)
+      method: "GET",
+      credentials: "include",
     })
-  }
+      .then((response) => {
+        if (!response.ok) return;
+        response.json();
+      })
+      .then((data) => {
+        setUser(data);
+      });
+  };
 
   return (
     <AuthContext.Provider
@@ -58,7 +61,7 @@ function AuthProvider({ children }) {
   );
 }
 
-export default AuthProvider
+export default AuthProvider;
 
 export function useAuth() {
   return useContext(AuthContext);
