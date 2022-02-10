@@ -166,7 +166,15 @@ func (s *Server) handleGithubCallback(w http.ResponseWriter, r *http.Request) {
 // handleMe handels GET '/oauth/user/me'.
 // returns an userProfileResponse.
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
-	SendJSON(w, pa.UserFromContext(r.Context()))
+	v := pa.UserFromContext(r.Context())
+	sendData := struct {
+		user   *pa.User `json:"user"`
+		pfpURL string   `json:"pfpUrl"`
+	}{
+		user:   v,
+		pfpURL: v.AvatarURL(10),
+	}
+	SendJSON(w, sendData)
 }
 
 // handleCheckAuth handles GET '/oauth/user/check-auth'.
