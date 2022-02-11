@@ -7,8 +7,8 @@ function Projects({ data }) {
     <>
       <NextSeo title="Projects" />
       <ProjectLayout>
-        {data.map((obj) => {
-          return <Project project={obj} />;
+        {data.map((obj, i) => {
+          return <Project project={obj} key={i}/>;
         })}
       </ProjectLayout>
     </>
