@@ -161,20 +161,17 @@ func (s *Server) handleGithubCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	http.Redirect(w, r, s.conf.HTTP.FrontendURL+"/?showModal=true", http.StatusFound) // redirect and show profile.
 }
 
 // handleMe handels GET '/oauth/user/me'.
 // returns an userProfileResponse.
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 	v := pa.UserFromContext(r.Context())
-	sendData := struct {
-		user   *pa.User `json:"user"`
-		pfpURL string   `json:"pfpUrl"`
-	}{
-		user:   v,
-		pfpURL: v.AvatarURL(10),
-	}
-	SendJSON(w, sendData)
+	SendJSON(w, getMeResponse{
+		User:   v,
+		PfpURL: v.AvatarURL(100),
+	})
 }
 
 // handleCheckAuth handles GET '/oauth/user/check-auth'.
