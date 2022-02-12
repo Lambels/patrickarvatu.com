@@ -15,7 +15,6 @@ function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("anything");
     updateUser();
   }, []);
 
