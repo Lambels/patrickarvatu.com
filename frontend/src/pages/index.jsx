@@ -1,7 +1,23 @@
 import { NextSeo } from "next-seo";
+import { useEffect, useState } from "react";
 import { Fade } from "react-awesome-reveal";
+import Backdrop from "../components/backdrop/backdrop";
+import LoginModal from "../components/login-modal/login-modal";
+import ProfileCard from "../components/profile-card";
+import { useAuth } from "../store/auth-context";
 
-function Home() {
+function Home({ showModalParam }) {
+  const [showModal, setShowModal] = useState(false);
+  const { isAuth, data } = useAuth();
+
+  const handleClickBackdrop = () => {
+    setShowModal(false);
+  };
+
+  useEffect(() => {
+    if (showModalParam === "true") setShowModal(true);
+  }, []);
+
   return (
     <>
       <NextSeo title="Home" />
@@ -81,8 +97,17 @@ function Home() {
           </Fade>
         </section>
       </div>
+      {showModal && !isAuth && <LoginModal />}
+      {showModal && isAuth && <ProfileCard user={data.user} pfpUrl={data.pfpUrl} />}
+      {showModal && <Backdrop onClick={handleClickBackdrop} />}
     </>
   );
+}
+
+Home.getInitialProps = async ({ query }) => {
+  const {showModal} = query
+
+  return {showModalParam: showModal}
 }
 
 export default Home;
