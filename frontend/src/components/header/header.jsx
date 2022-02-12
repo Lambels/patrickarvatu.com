@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "../../store/auth-context";
 import Backdrop from "../backdrop/backdrop";
 import LoginModal from "../login-modal/login-modal";
+import ProfileCard from "../profile-card";
 
 function Header() {
   const router = useRouter();
@@ -131,7 +132,8 @@ function Header() {
           </div>
         </div>
       </nav>
-      {profileModalIsOpen && <LoginModal />}
+      {profileModalIsOpen && !isAuth && <LoginModal />}
+      {profileModalIsOpen && isAuth && <ProfileCard user={data.user} pfpUrl={data.pfpUrl} />}
       {profileModalIsOpen && <Backdrop onClick={handleClickBackdrop} />}
     </>
   );
