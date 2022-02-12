@@ -1,6 +1,7 @@
 import { DefaultSeo } from "next-seo";
 import "tailwindcss/tailwind.css";
 import AppLayout from "../components/app-layout";
+import Header from "../components/header";
 import AuthProvider from "../store/auth-context";
 
 function Application({ Component, pageProps }) {
@@ -13,6 +14,7 @@ function Application({ Component, pageProps }) {
       />
       <AuthProvider>
         <AppLayout>
+          <Header />
           <Component {...pageProps} />
         </AppLayout>
       </AuthProvider>
