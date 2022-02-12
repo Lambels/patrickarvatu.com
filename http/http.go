@@ -63,6 +63,11 @@ func SendJSON(w io.Writer, data interface{}) error {
 
 // response and request types ----------------------------
 
+type getMeResponse struct {
+	User   *pa.User `json:"user"`
+	PfpURL string   `json:"pfpUrl"`
+}
+
 type getOtherUserResponse struct {
 	Username  string `json:"username"`
 	Email     string `json:"email"`
