@@ -98,16 +98,18 @@ function Home({ showModalParam }) {
         </section>
       </div>
       {showModal && !isAuth && <LoginModal />}
-      {showModal && isAuth && <ProfileCard user={data.user} pfpUrl={data.pfpUrl} />}
+      {showModal && isAuth && (
+        <ProfileCard user={data.user} pfpUrl={data.pfpUrl} />
+      )}
       {showModal && <Backdrop onClick={handleClickBackdrop} />}
     </>
   );
 }
 
 Home.getInitialProps = async ({ query }) => {
-  const {showModal} = query
+  const { showModal } = query;
 
-  return {showModalParam: showModal}
-}
+  return { showModalParam: showModal };
+};
 
 export default Home;
