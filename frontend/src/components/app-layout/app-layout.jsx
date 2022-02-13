@@ -1,8 +1,19 @@
-function AppLayout({ children }) {
+import classNames from "classnames";
+
+function AppLayout({ children, bgConf }) {
   return (
-  <div className="min-h-screen bg-cover bg-no-repeat bg-center bg-[url('/waves1.svg')]" id="main">
-    {children}
-  </div>
+    <div
+      className={classNames({
+        "min-h-screen": true,
+        "bg-cover": true,
+        "bg-no-repeat": true,
+        "bg-center": true,
+        [bgConf.bg]: true,
+      })}
+      id="main"
+    >
+      {children}
+    </div>
   );
 }
 
