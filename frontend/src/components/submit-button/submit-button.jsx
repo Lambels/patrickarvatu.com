@@ -10,7 +10,7 @@ function SubmitButton({ text, onClick, d, ...rest }) {
         <svg
           className="w-5 h-5 text-gray-600 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-400"
           xmlns="http://www.w3.org/2000/svg"
-          viewBox="1 2 22 21"
+          viewBox="0 2 25 21"
           fill="currentColor"
           aria-hidden="true"
         >
