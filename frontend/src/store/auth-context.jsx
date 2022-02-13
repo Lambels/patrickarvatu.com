@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext({
-  user: undefined,
+  data: undefined,
   isAuth: false,
   logout: () => {},
   redirectToProvider: () => {},
@@ -10,7 +10,7 @@ const AuthContext = createContext({
 });
 
 function AuthProvider({ children }) {
-  const [user, setUser] = useState({});
+  const [data, setData] = useState({});
   const [isAuth, setIsAuth] = useState(false);
   const router = useRouter();
 
@@ -37,18 +37,18 @@ function AuthProvider({ children }) {
       credentials: "include",
     })
       .then((response) => {
-        if (!response.ok) return;
-        response.json();
+        return response.json();
       })
       .then((data) => {
-        setUser(data);
+        setData(data);
+        if (data !== undefined) setIsAuth(true);
       });
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user: user,
+        data: data,
         isAuth: isAuth,
         logout: logout,
         redirectToProvider: redirectToProvider,
