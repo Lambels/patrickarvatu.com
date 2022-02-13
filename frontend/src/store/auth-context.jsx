@@ -37,6 +37,7 @@ function AuthProvider({ children }) {
       credentials: "include",
     })
       .then((response) => {
+        if (!response.ok) return;
         return response.json();
       })
       .then((data) => {
