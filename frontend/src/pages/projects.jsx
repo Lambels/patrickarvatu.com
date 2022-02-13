@@ -16,7 +16,7 @@ function Projects({ data }) {
 }
 
 export async function getServerSideProps() {
-  const response = await fetch("https://api.github.com/users/Lambels/repos");
+  const response = await fetch("http://localhost:8080/v1/");
 
   const data = await response.json();
   return { props: { data } };
