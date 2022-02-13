@@ -17,7 +17,7 @@ import (
 func (s *Server) registerAuthRoutes(r chi.Router) {
 	r.Delete("/logout", s.handleLogout)
 	r.Get("/github", s.handleGithubOAuth)
-	r.Post("/github/callback", s.handleGithubCallback)
+	r.Get("/github/callback", s.handleGithubCallback)
 
 	r.Route("/user", func(r chi.Router) {
 		r.Use(s.jsonResponseTypeMiddleware)
@@ -74,8 +74,8 @@ func (s *Server) handleGithubOAuth(w http.ResponseWriter, r *http.Request) {
 // fetches at least user id from github.
 // creates auth object and user.
 func (s *Server) handleGithubCallback(w http.ResponseWriter, r *http.Request) {
-	state := r.FormValue("state") // state sent back from github.
-	code := r.FormValue("code")   // temp grant code.
+	state := r.URL.Query().Get("state") // state sent back from github.
+	code := r.URL.Query().Get("code")   // temp grant code.
 
 	// read session from request.
 	ses, err := s.getSession(r)
