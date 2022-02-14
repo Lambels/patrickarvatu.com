@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/gorilla/securecookie"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/robfig/cron/v3"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -30,6 +31,7 @@ type Server struct {
 	router *chi.Mux
 	ln     net.Listener
 	sc     *securecookie.SecureCookie
+	cron   *cron.Cron
 
 	// server address.
 	Addr   string
@@ -117,6 +119,9 @@ func (s *Server) Open() error {
 		return err
 	}
 
+	// open cronjob.
+	s.openCronJob()
+
 	// set listener.
 	if s.Domain != "" {
 		s.ln = autocert.NewListener(s.Domain)
@@ -140,8 +145,10 @@ func (s *Server) UseTLS() bool {
 	return s.Domain != ""
 }
 
-// Close brings the server to a gracefull shutdown.
+// Close brings the server to a gracefull shutdown and stops the cron job.
 func (s *Server) Close() error {
+	s.cron.Stop() // stop the cron job.
+
 	cancelCtx, cancel := context.WithTimeout(context.Background(), ServerShutdownTime)
 	defer cancel() // release resources.
 	return s.server.Shutdown(cancelCtx)
@@ -159,6 +166,22 @@ func (s *Server) openSecureCookie() error {
 	s.sc = securecookie.New([]byte(s.conf.HTTP.HashKey), []byte(s.conf.HTTP.BlockKey))
 	s.sc.SetSerializer(securecookie.JSONEncoder{}) // use the json encoder.
 	return nil
+}
+
+// cronJob ------------------------------------------------------------------
+
+// openCronJob creates a new cron job with cron.DefaultLogger.
+func (s *Server) openCronJob() {
+	s.cron = cron.New(cron.WithLogger(
+		cron.DefaultLogger,
+	))
+	s.cron.Start()
+}
+
+// RegisterCronJob registers a new job to s.cron, can be call regardless if cron is or isnt running.
+func (s *Server) RegisterCronJon(spec string, cmd func()) error {
+	_, err := s.cron.AddFunc(spec, cmd)
+	return err
 }
 
 // RunDebugServer runs a debug server on port 8000
