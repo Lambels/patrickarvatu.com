@@ -22,8 +22,11 @@ import (
 	"golang.org/x/oauth2/github"
 )
 
-// ServerShutdownTime is the time the server allows processes to finish before shuting down
+// ServerShutdownTime is the time the server allows processes to finish before shuting down.
 const ServerShutdownTime = 3 * time.Second
+
+// ReposEndpoint represents the endpoint to get repos for projects state, configurable for tests.
+var ReposEndpoint string = "https://api.github.com/users/Lambels/repos"
 
 // Server represents a backend api HTTP service which wraps all our HTTP functionality.
 type Server struct {
@@ -46,6 +49,7 @@ type Server struct {
 	EventService        pa.EventService
 	SubscriptionService pa.SubscriptionService
 	EmailService        pa.EmailService
+	ProjectService      pa.ProjectService
 
 	conf *pa.Config
 }
@@ -55,7 +59,10 @@ func NewServer(conf *pa.Config) *Server {
 	s := &Server{
 		server: &http.Server{},
 		router: chi.NewRouter(),
-		conf:   conf,
+		cron: cron.New(cron.WithLogger(
+			cron.DefaultLogger,
+		)),
+		conf: conf,
 	}
 
 	// middleware stack.
@@ -119,6 +126,14 @@ func (s *Server) Open() error {
 		return err
 	}
 
+	log.Println("[INFO] running github repo job")
+	s.gtihubRepoJob()
+
+	// register github cron job.
+	if err := s.RegisterCronJon("@hourly", s.gtihubRepoJob); err != nil {
+		return err
+	}
+
 	// open cronjob.
 	s.openCronJob()
 
@@ -172,9 +187,6 @@ func (s *Server) openSecureCookie() error {
 
 // openCronJob creates a new cron job with cron.DefaultLogger.
 func (s *Server) openCronJob() {
-	s.cron = cron.New(cron.WithLogger(
-		cron.DefaultLogger,
-	))
 	s.cron.Start()
 }
 
@@ -456,4 +468,95 @@ func (s *Server) HandleSubBlogEvent(ctx context.Context, hand pa.SubscriptionSer
 		}
 	}
 	return nil
+}
+
+// cronjobs ------------------------------------------------------------
+
+// gtihubRepoJob represents an hourly job to sync system project state with github project state.
+func (s *Server) gtihubRepoJob() {
+	adminCtx := pa.NewContextWithUser(context.Background(), &pa.User{IsAdmin: true})
+
+	// get current projects.
+	currentProjects, _, err := s.ProjectService.FindProjects(adminCtx, pa.ProjectFilter{})
+	if err != nil {
+		log.Println("[FindProjects] err: ", err.Error())
+		return
+	}
+
+	// get projects from github.
+	ghProjects, err := s.getRepos()
+	if err != nil {
+		log.Println("[getRepos] err: ", err.Error())
+		return
+	}
+
+	// used to check for project existance.
+	ghProjectMap := map[string]struct{}{}
+
+	for _, v := range ghProjects {
+		ghProjectMap[v.Name] = struct{}{}
+	}
+
+	// sync deleted projects.
+	for _, v := range currentProjects {
+		// project not found in new map, delete of project on github -> delete project here.
+		if _, ok := ghProjectMap[v.Name]; !ok {
+			if err := s.ProjectService.DeleteProject(adminCtx, v.Name); err != nil {
+				log.Println("[DeleteProjects] err: ", err.Error())
+				return
+			}
+		}
+	}
+
+	// sync existing / new projects.
+	for _, v := range ghProjects {
+		// after purging non existing projects we
+		if err := s.ProjectService.CreateOrUpdateProject(adminCtx, v); err != nil {
+			return
+		}
+	}
+}
+
+// getRepos returns a list of projects from the github api.
+func (s *Server) getRepos() ([]*pa.Project, error) {
+	// prepare request.
+	req, err := http.NewRequest(http.MethodGet, ReposEndpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// execute request.
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// unmarshal response body.
+	decoder := json.NewDecoder(resp.Body)
+
+	// read open bracket.
+	if _, err := decoder.Token(); err != nil {
+		return nil, err
+	}
+
+	var projects []*pa.Project
+
+	// read main body.
+	for decoder.More() {
+		var proj pa.Project
+
+		if err := decoder.Decode(&proj); err != nil {
+			return nil, err
+		}
+
+		projects = append(projects, &proj)
+	}
+
+	// read closing bracket.
+	if _, err := decoder.Token(); err != nil {
+		return nil, err
+	}
+
+	return projects, nil
 }
