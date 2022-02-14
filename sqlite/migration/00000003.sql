@@ -72,7 +72,7 @@ CREATE TABLE projects (
 
 -- many 2 many relation.
 CREATE TABLE projects_topics (
-    project_id              INTEGER NOT NULL REFERENCES projects (id),
+    project_id              INTEGER NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
     topic_description_id    INTEGER NOT NULL REFERENCES topics_description (id) ON DELETE CASCADE
 );
 
