@@ -42,7 +42,7 @@ type CommentPayload struct {
 	SubBlog   *SubBlog `json:"subBlog"`
 }
 
-// EventService represents a service which manages auth in the system.
+// EventService represents a service which manages events in the system.
 type EventService interface {
 	// Push pushes event in the event queue.
 	Push(ctx context.Context, event Event) error

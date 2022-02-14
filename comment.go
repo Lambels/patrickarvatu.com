@@ -38,7 +38,7 @@ func (c *Comment) Validate() error {
 	return nil
 }
 
-// CommentService represents a service which manages auth in the system.
+// CommentService represents a service which manages comments in the system.
 type CommentService interface {
 	// FindCommentByID returns a comment based on the id.
 	// returns ENOTFOUND if the comment doesent exist.

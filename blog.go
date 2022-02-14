@@ -31,7 +31,7 @@ func (b *Blog) Validate() error {
 	return nil
 }
 
-// BlogService represents a service which manages auth in the system.
+// BlogService represents a service which manages blogs in the system.
 type BlogService interface {
 	// FindBlogByID returns a blog based on the id.
 	// returns ENOTFOUND if the blog doesent exist.

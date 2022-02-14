@@ -41,7 +41,7 @@ func (s *SubBlog) Validate() error {
 	return nil
 }
 
-// SubBlogService represents a service which manages auth in the system.
+// SubBlogService represents a service which manages sub-blogs in the system.
 type SubBlogService interface {
 	// FindSubBlogByID returns a sub blog based on the id.
 	// returns ENOTFOUND if the sub blog doesent exist.
