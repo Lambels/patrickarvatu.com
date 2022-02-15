@@ -256,6 +256,7 @@ func (s *SubscriptionService) CreateSubscription(ctx context.Context, subscripti
 	if err := createSubscription(ctx, tx, subscription); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -352,6 +353,7 @@ func (s *SubscriptionService) DeleteSubscription(ctx context.Context, id int, to
 	if err := deleteSubscription(ctx, tx, filter); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -388,6 +390,7 @@ func deleteBlogSubscription(ctx context.Context, tx *Tx, filter pa.SubscriptionF
 	if _, err := tx.ExecContext(ctx, `DELETE FROM blog_subscriptions WHERE id = ?`, filter.ID); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -408,6 +411,7 @@ func deleteSubBlogSubscription(ctx context.Context, tx *Tx, filter pa.Subscripti
 	if _, err := tx.ExecContext(ctx, `DELETE FROM sub_blog_subscriptions WHERE id = ?`, filter.ID); err != nil {
 		return err
 	}
+
 	return nil
 }
 

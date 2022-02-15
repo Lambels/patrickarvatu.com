@@ -123,6 +123,7 @@ func (s *AuthService) CreateAuth(ctx context.Context, auth *pa.Auth) error {
 	} else if err := attachUserToAuth(ctx, tx, auth); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -138,6 +139,7 @@ func (s *AuthService) DeleteAuth(ctx context.Context, id int) error {
 	if err := deleteAuth(ctx, tx, id); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -153,6 +155,7 @@ func findAuthByID(ctx context.Context, tx *Tx, id int) (*pa.Auth, error) {
 	} else if len(auths) == 0 {
 		return nil, pa.Errorf(pa.ENOTFOUND, "auth not found.")
 	}
+
 	return auths[0], nil
 }
 
@@ -169,6 +172,7 @@ func findAuthBySourceID(ctx context.Context, tx *Tx, source string, sourceID str
 	} else if len(auths) == 0 {
 		return nil, pa.Errorf(pa.ENOTFOUND, "auth not found.")
 	}
+
 	return auths[0], nil
 }
 
@@ -367,6 +371,7 @@ func deleteAuth(ctx context.Context, tx *Tx, id int) error {
 	if _, err := tx.ExecContext(ctx, `DELETE FROM auths WHERE id = ?`, id); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -374,5 +379,6 @@ func attachUserToAuth(ctx context.Context, tx *Tx, auth *pa.Auth) (err error) {
 	if auth.User, err = findUserByID(ctx, tx, auth.UserID); err != nil {
 		return fmt.Errorf("attachUserToAuth: %w", err)
 	}
+
 	return nil
 }

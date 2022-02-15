@@ -44,6 +44,7 @@ func (s *BlogService) FindBlogByID(ctx context.Context, id int) (*pa.Blog, error
 			return nil, err
 		}
 	}
+
 	return blog, nil
 }
 
@@ -73,6 +74,7 @@ func (s *BlogService) FindBlogs(ctx context.Context, filter pa.BlogFilter) ([]*p
 			}
 		}
 	}
+
 	return blogs, n, nil
 }
 
@@ -89,6 +91,7 @@ func (s *BlogService) CreateBlog(ctx context.Context, blog *pa.Blog) error {
 	if err := createBlog(ctx, tx, blog); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -132,6 +135,7 @@ func (s *BlogService) DeleteBlog(ctx context.Context, id int) error {
 	if err := deleteBlog(ctx, tx, id); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -304,6 +308,7 @@ func deleteBlog(ctx context.Context, tx *Tx, id int) error {
 	if _, err := tx.ExecContext(ctx, `DELETE FROM blogs WHERE id = ?`, id); err != nil {
 		return err
 	}
+
 	return nil
 }
 

@@ -41,6 +41,7 @@ func (s *UserService) FindUserByID(ctx context.Context, id int) (*pa.User, error
 	} else if err := attachAuthtoUser(ctx, tx, user); err != nil {
 		return nil, err
 	}
+
 	return user, nil
 }
 
@@ -62,6 +63,7 @@ func (s *UserService) FindUsers(ctx context.Context, filter pa.UserFilter) ([]*p
 			return users, n, err
 		}
 	}
+
 	return users, n, nil
 }
 
@@ -80,6 +82,7 @@ func (s *UserService) CreateUser(ctx context.Context, user *pa.User) error {
 	} else if err = attachAuthtoUser(ctx, tx, user); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -103,6 +106,7 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, update pa.UserUpda
 	} else if err := tx.Commit(); err != nil {
 		return nil, err
 	}
+
 	return user, nil
 }
 
@@ -119,6 +123,7 @@ func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 	if err := deleteUser(ctx, tx, id); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -132,6 +137,7 @@ func findUserByID(ctx context.Context, tx *Tx, id int) (*pa.User, error) {
 	} else if len(users) == 0 {
 		return nil, pa.Errorf(pa.ENOTFOUND, "user not found")
 	}
+
 	return users[0], nil
 }
 
@@ -145,6 +151,7 @@ func findUserByEmail(ctx context.Context, tx *Tx, email string) (*pa.User, error
 	} else if len(users) == 0 {
 		return nil, pa.Errorf(pa.ENOTFOUND, "user not found")
 	}
+
 	return users[0], nil
 }
 
@@ -331,6 +338,7 @@ func deleteUser(ctx context.Context, tx *Tx, id int) error {
 	if _, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = ?`, id); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -342,5 +350,6 @@ func attachAuthtoUser(ctx context.Context, tx *Tx, user *pa.User) (err error) {
 	if user.Auths, _, err = findAuths(ctx, tx, filter); err != nil {
 		return err
 	}
+
 	return nil
 }

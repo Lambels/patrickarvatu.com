@@ -60,6 +60,7 @@ func (s *CommentService) FindComments(ctx context.Context, filter pa.CommentFilt
 			return comments, n, err
 		}
 	}
+
 	return comments, n, nil
 }
 
@@ -77,6 +78,7 @@ func (s *CommentService) CreateComment(ctx context.Context, comment *pa.Comment)
 	} else if err := attachUserToComment(ctx, tx, comment); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -97,6 +99,7 @@ func (s *CommentService) UpdateComment(ctx context.Context, id int, update pa.Co
 	} else if err := attachUserToComment(ctx, tx, comment); err != nil {
 		return nil, err
 	}
+
 	return comment, tx.Commit()
 }
 
@@ -113,6 +116,7 @@ func (s *CommentService) DeleteComment(ctx context.Context, id int) error {
 	if err := deleteComment(ctx, tx, id); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -127,6 +131,7 @@ func findCommentByID(ctx context.Context, tx *Tx, id int) (*pa.Comment, error) {
 	} else if len(comments) == 0 {
 		return nil, pa.Errorf(pa.ENOTFOUND, "comment not found")
 	}
+
 	return comments[0], nil
 }
 
@@ -275,6 +280,7 @@ func deleteComment(ctx context.Context, tx *Tx, id int) error {
 	if _, err := tx.ExecContext(ctx, `DELETE FROM comments WHERE id = ?`, id); err != nil {
 		return err
 	}
+
 	return nil
 }
 

@@ -38,6 +38,7 @@ func (s *SubBlogService) FindSubBlogByID(ctx context.Context, id int) (*pa.SubBl
 	} else if err := attachCommentsToSubBlog(ctx, tx, subBlog); err != nil {
 		return nil, err
 	}
+
 	return subBlog, nil
 }
 
@@ -59,6 +60,7 @@ func (s *SubBlogService) FindSubBlogs(ctx context.Context, filter pa.SubBlogFilt
 			return subBlogs, n, err
 		}
 	}
+
 	return subBlogs, n, nil
 }
 
@@ -74,6 +76,7 @@ func (s *SubBlogService) CreateSubBlog(ctx context.Context, subBlog *pa.SubBlog)
 	if err := createSubBlog(ctx, tx, subBlog); err != nil {
 		return err
 	} // nothing to attach as the only field to be populated is comments which cant exist before sub blog.
+
 	return tx.Commit()
 }
 
@@ -93,6 +96,7 @@ func (s *SubBlogService) UpdateSubBlog(ctx context.Context, id int, update pa.Su
 	} else if err := attachCommentsToSubBlog(ctx, tx, subBlog); err != nil {
 		return nil, err
 	}
+
 	return subBlog, tx.Commit()
 }
 
@@ -109,6 +113,7 @@ func (s *SubBlogService) DeleteSubBlog(ctx context.Context, id int) error {
 	if err := deleteSubBlog(ctx, tx, id); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -122,6 +127,7 @@ func findSubBlogByID(ctx context.Context, tx *Tx, id int) (*pa.SubBlog, error) {
 	} else if len(subBlogs) == 0 {
 		return nil, pa.Errorf(pa.ENOTFOUND, "sub blog not found.")
 	}
+
 	return subBlogs[0], nil
 }
 
@@ -287,6 +293,7 @@ func deleteSubBlog(ctx context.Context, tx *Tx, id int) error {
 	if _, err := tx.ExecContext(ctx, `DELETE FROM sub_blogs WHERE id = ?`, id); err != nil {
 		return err
 	}
+
 	return nil
 }
 
