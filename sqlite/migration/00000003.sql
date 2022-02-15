@@ -78,5 +78,7 @@ CREATE TABLE projects_topics (
 
 CREATE TABLE topics_description (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
-    content TEXT NOT NULL
+    content TEXT NOT NULL,
+
+    UNIQUE(content)
 );
