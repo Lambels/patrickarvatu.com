@@ -15,6 +15,18 @@ type Project struct {
 	HtmlURL     string   `json:"html_url"`
 }
 
+// TopicLink represents a link between a topic and a project.
+type TopicLink struct {
+	ProjectID int
+	TopicID   int
+}
+
+// Topic represents a topic from github.
+type Topic struct {
+	ID      int
+	Content string
+}
+
 // Validate performs basic validation on the project.
 // returns EINVALID if any error is found.
 func (p *Project) Validate() error {
