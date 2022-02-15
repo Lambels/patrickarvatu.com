@@ -327,14 +327,15 @@ func TestFindBlogs(t *testing.T) {
 		backgroundCtx := context.Background()
 
 		blogService := sqlite.NewBlogService(db)
+		subBlogService := sqlite.NewSubBlogService(db)
 
 		user := &pa.User{
-			Name:    "Jhon Doe",
-			Email:   "jhon@doe.com",
+			Name:    "Patrick",
+			Email:   "patrick.arvatu@yahoo.com",
 			IsAdmin: true,
-		} // no need to create user as DeleteBlog doesent check any keys.
+		}
 
-		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
+		adminUsrCtx := MustCreateUser(t, db, backgroundCtx, user)
 
 		blog := &pa.Blog{
 			Title: "abc",
@@ -350,6 +351,24 @@ func TestFindBlogs(t *testing.T) {
 		// create blog.
 		MustCreateBlog(t, db, adminUsrCtx, blog2)
 
+		subBlog := &pa.SubBlog{
+			BlogID:  blog.ID,
+			Title:   "some title",
+			Content: "some content",
+		}
+
+		// create sub blog.
+		MustCreateSubBlog(t, db, adminUsrCtx, subBlog)
+
+		comment := &pa.Comment{
+			SubBlogID: subBlog.ID,
+			UserID:    user.ID,
+			Content:   "some content",
+		}
+
+		// create comment.
+		MustCreateComment(t, db, adminUsrCtx, comment)
+
 		// find blogs.
 		if gotBlogs, n, err := blogService.FindBlogs(backgroundCtx, pa.BlogFilter{Title: NewStringPointer(blog.Title)}); err != nil {
 			t.Fatal(err)
@@ -357,6 +376,15 @@ func TestFindBlogs(t *testing.T) {
 			t.Fatalf("len=%v != 2", len(gotBlogs))
 		} else if n != 2 {
 			t.Fatalf("n=%v != 2", n)
+		}
+
+		// find blogs deep search.
+		if gotBlog, err := blogService.FindBlogByID(backgroundCtx, blog.ID); err != nil {
+			t.Fatal(err)
+		} else if gotSubBlog, err := subBlogService.FindSubBlogByID(backgroundCtx, subBlog.ID); err != nil {
+			t.Fatal(err)
+		} else if !reflect.DeepEqual(gotBlog.SubBlogs[0], gotSubBlog) {
+			t.Fatal("DeepEqual: gotBlog.SubBlogs[0] != subBlog")
 		}
 	})
 
