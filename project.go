@@ -68,9 +68,8 @@ type ProjectService interface {
 // ProjectFilter represents a filter used by FindProjects to filter the response.
 type ProjectFilter struct {
 	// fields to filter on.
-	ID     *int      `json:"id"`
-	Name   *string   `json:"name"`
-	Topics *[]string `json:"topics"`
+	ID   *int    `json:"id"`
+	Name *string `json:"name"`
 
 	// restrictions on the result set, used for pagination and set limits.
 	Offset int `json:"offset"`
