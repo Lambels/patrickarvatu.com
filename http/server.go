@@ -510,7 +510,7 @@ func (s *Server) gtihubRepoJob() {
 
 	// sync existing / new projects.
 	for _, v := range ghProjects {
-		// after purging non existing projects we
+		// after purging non existing projects we update or create remainibg projects.
 		if err := s.ProjectService.CreateOrUpdateProject(adminCtx, v); err != nil {
 			return
 		}
