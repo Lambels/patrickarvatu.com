@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"context"
+	"strings"
 
 	pa "github.com/Lambels/patrickarvatu.com"
 )
@@ -156,19 +157,218 @@ func findProjectByName(ctx context.Context, tx *Tx, name string) (*pa.Project, e
 }
 
 func findProjects(ctx context.Context, tx *Tx, filter pa.ProjectFilter) (_ []*pa.Project, n int, err error) {
-	return nil, 0, nil
+	// build where and args statement method.
+	// not vulnerable to sql injection attack.
+	where, args := []string{"1 = 1"}, []interface{}{}
+
+	if v := filter.ID; v != nil {
+		where = append(where, "id = ?")
+		args = append(args, *v)
+	}
+	if v := filter.Name; v != nil {
+		where = append(where, "name = ?")
+		args = append(args, *v)
+	}
+
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			id,
+			name,
+			description,
+			html_url,
+			COUNT(*) OVER()
+		FROM projects
+		WHERE `+strings.Join(where, " AND ")+`
+		ORDER BY id ASC
+		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
+	`,
+		args...,
+	)
+
+	if err != nil {
+		return nil, n, err
+	}
+	defer rows.Close()
+
+	// deserialize rows.
+	projects := []*pa.Project{}
+	for rows.Next() {
+		var proj pa.Project
+
+		if err := rows.Scan(
+			&proj.ID,
+			&proj.Name,
+			&proj.Description,
+			&proj.HtmlURL,
+			&n,
+		); err != nil {
+			return nil, 0, err
+		}
+
+		projects = append(projects, &proj)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return projects, n, nil
 }
 
-// TODO: handle topics
 func createProject(ctx context.Context, tx *Tx, project *pa.Project) error {
+	if !pa.IsAdminContext(ctx) {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
+
+	if err := project.Validate(); err != nil {
+		return err
+	}
+
+	// create project.
+	result, err := tx.ExecContext(ctx, `
+		INSERT INTO projects (
+			name,
+			description,
+			html_url
+		)
+		VALUES(?, ?, ?)
+	`,
+		project.Name,
+		project.Description,
+		project.HtmlURL,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	// set id from database to blog obj.
+	project.ID = int(id)
+
+	// handle topics.
+	for _, content := range project.Topics {
+		var topic *pa.Topic
+		topic, err = findTopicByContent(ctx, tx, content)
+
+		switch pa.ErrorCode(err) {
+		case pa.ENOTFOUND: // new topic (need to create)
+			if err := createNewTopic(ctx, tx, content); err != nil {
+				return err
+			}
+
+			// assign to topic new topic.
+			topic, err = findTopicByContent(ctx, tx, content)
+			if err != nil {
+				return err
+			}
+
+		case "": // no error. (leave default value for topic)
+
+		default: // internall error. (return)
+			return err
+		}
+
+		// create link.
+		if err := createNewTopicLink(ctx, tx, &pa.TopicLink{
+			ProjectID: project.ID,
+			TopicID:   topic.ID,
+		}); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func updateProject(ctx context.Context, tx *Tx, id int, project *pa.Project) error {
+	if !pa.IsAdminContext(ctx) {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
+
+	if err := project.Validate(); err != nil {
+		return err
+	}
+
+	currentProject, err := findProjectByID(ctx, tx, id)
+	if err != nil {
+		return err
+	}
+
+	// delete all topic links.
+	if len(currentProject.Topics) > 0 {
+		if err := deleteTopicLinkByProjectID(ctx, tx, currentProject.ID); err != nil {
+			return err
+		}
+	}
+
+	// update project.
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE projects
+		SET name 		= ?,
+			description = ?,
+			html_url	= ?
+		WHERE id = ?
+	`,
+		project.Name,
+		project.Description,
+		project.HtmlURL,
+		id,
+	); err != nil {
+		return err
+	}
+
+	// handle topics.
+	for _, content := range project.Topics {
+		var topic *pa.Topic
+		topic, err = findTopicByContent(ctx, tx, content)
+
+		switch pa.ErrorCode(err) {
+		case pa.ENOTFOUND: // new topic (need to create)
+			if err := createNewTopic(ctx, tx, content); err != nil {
+				return err
+			}
+
+			// assign to topic new topic.
+			topic, err = findTopicByContent(ctx, tx, content)
+			if err != nil {
+				return err
+			}
+
+		case "": // no error. (leave default value for topic)
+
+		default: // internall error. (return)
+			return err
+		}
+
+		// create link.
+		if err := createNewTopicLink(ctx, tx, &pa.TopicLink{
+			ProjectID: project.ID,
+			TopicID:   topic.ID,
+		}); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func deleteProject(ctx context.Context, tx *Tx, name string) error {
+	if !pa.IsAdminContext(ctx) {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
+
+	if _, err := findProjectByName(ctx, tx, name); err != nil {
+		return err
+	}
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM projects WHERE name = ?`, name); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -176,6 +376,9 @@ func deleteProject(ctx context.Context, tx *Tx, name string) error {
 // to not be used directly.
 
 func createNewTopic(ctx context.Context, tx *Tx, content string) error {
+	if !pa.IsAdminContext(ctx) {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
 	return nil
 }
 
@@ -184,6 +387,13 @@ func findTopicByContent(ctx context.Context, tx *Tx, content string) (*pa.Topic,
 }
 
 func createNewTopicLink(ctx context.Context, tx *Tx, topicLink *pa.TopicLink) error {
+	if !pa.IsAdminContext(ctx) {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
+	return nil
+}
+
+func deleteTopicLinkByProjectID(ctx context.Context, tx *Tx, projID int) error {
 	return nil
 }
 
