@@ -256,12 +256,8 @@ func createProject(ctx context.Context, tx *Tx, project *pa.Project) error {
 
 		switch pa.ErrorCode(err) {
 		case pa.ENOTFOUND: // new topic (need to create)
-			if err := createNewTopic(ctx, tx, content); err != nil {
-				return err
-			}
-
-			// assign to topic new topic.
-			topic, err = findTopicByContent(ctx, tx, content)
+			// create and assign new topic to topic var.
+			topic, err = createNewTopic(ctx, tx, content)
 			if err != nil {
 				return err
 			}
@@ -328,12 +324,8 @@ func updateProject(ctx context.Context, tx *Tx, id int, project *pa.Project) err
 
 		switch pa.ErrorCode(err) {
 		case pa.ENOTFOUND: // new topic (need to create)
-			if err := createNewTopic(ctx, tx, content); err != nil {
-				return err
-			}
-
-			// assign to topic new topic.
-			topic, err = findTopicByContent(ctx, tx, content)
+			// create and assign new topic to topic var.
+			topic, err = createNewTopic(ctx, tx, content)
 			if err != nil {
 				return err
 			}
@@ -375,11 +367,11 @@ func deleteProject(ctx context.Context, tx *Tx, name string) error {
 // topics: many 2 many interface functions ----------------------------------------------
 // to not be used directly.
 
-func createNewTopic(ctx context.Context, tx *Tx, content string) error {
+func createNewTopic(ctx context.Context, tx *Tx, content string) (*pa.Topic, error) {
 	if !pa.IsAdminContext(ctx) {
-		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+		return nil, pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
 	}
-	return nil
+	return nil, nil
 }
 
 func findTopicByContent(ctx context.Context, tx *Tx, content string) (*pa.Topic, error) {
