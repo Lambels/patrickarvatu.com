@@ -90,6 +90,12 @@ func (s *ProjectService) CreateOrUpdateProject(ctx context.Context, project *pa.
 	defer tx.Rollback()
 
 	proj, err := findProjectByName(ctx, tx, project.Name)
+
+	// make topics available to createProject and updateProject by attaching them.
+	if err := attachTopicsToProject(ctx, tx, proj); err != nil {
+		return err
+	}
+
 	switch pa.ErrorCode(err) {
 	case pa.ENOTFOUND: // (project doesent exist)
 		if err := createProject(ctx, tx, project); err != nil {
@@ -269,7 +275,7 @@ func createProject(ctx context.Context, tx *Tx, project *pa.Project) error {
 		}
 
 		// create link.
-		if err := createNewTopicLink(ctx, tx, &pa.TopicLink{
+		if err := createTopicLink(ctx, tx, &pa.TopicLink{
 			ProjectID: project.ID,
 			TopicID:   topic.ID,
 		}); err != nil {
@@ -337,7 +343,7 @@ func updateProject(ctx context.Context, tx *Tx, id int, project *pa.Project) err
 		}
 
 		// create link.
-		if err := createNewTopicLink(ctx, tx, &pa.TopicLink{
+		if err := createTopicLink(ctx, tx, &pa.TopicLink{
 			ProjectID: project.ID,
 			TopicID:   topic.ID,
 		}); err != nil {
@@ -365,34 +371,149 @@ func deleteProject(ctx context.Context, tx *Tx, name string) error {
 }
 
 // topics: many 2 many interface functions ----------------------------------------------
-// to not be used directly.
+// to not be used directly (internal tools).
 
 func createNewTopic(ctx context.Context, tx *Tx, content string) (*pa.Topic, error) {
 	if !pa.IsAdminContext(ctx) {
 		return nil, pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
 	}
-	return nil, nil
+
+	if content == "" {
+		return nil, pa.Errorf(pa.EINVALID, "content must not be empty.")
+	}
+
+	result, err := tx.ExecContext(ctx, `
+		INSERT INTO topics_description (
+			content
+		)
+		VALUES(?)
+	`,
+		content,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	// set id from database to topic obj.
+	return &pa.Topic{
+		ID:      int(id),
+		Content: content,
+	}, nil
 }
 
 func findTopicByContent(ctx context.Context, tx *Tx, content string) (*pa.Topic, error) {
-	return nil, nil
-}
-
-func createNewTopicLink(ctx context.Context, tx *Tx, topicLink *pa.TopicLink) error {
-	if !pa.IsAdminContext(ctx) {
-		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	// use more compact `QueryRow` format for result sets with at most one row expected.
+	var topic pa.Topic
+	if err := tx.QueryRowContext(ctx, `
+		SELECT
+			id,
+			content
+		FROM topics_description
+		WHERE content = ?
+	`,
+		content,
+	).Scan(&topic); err != nil {
+		return nil, err
 	}
-	return nil
-}
 
-func deleteTopicLinkByProjectID(ctx context.Context, tx *Tx, projID int) error {
-	return nil
+	return &topic, nil
 }
 
 func findTopicsByProjectID(ctx context.Context, tx *Tx, id int) ([]*pa.Topic, error) {
-	return nil, nil
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			topic_description_id
+		FROM projects_topics
+		WHERE project_id = ?
+	`,
+		id,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// deserialize rows.
+	var topicIDs []int
+	for rows.Next() {
+		var topicID int
+
+		if err := rows.Scan(&topicID); err != nil {
+			return nil, err
+		}
+
+		topicIDs = append(topicIDs, topicID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// loop over each topicID.
+	topics := []*pa.Topic{}
+	for _, id := range topicIDs {
+		var content string
+
+		// query the content for each id.
+		if err := tx.QueryRowContext(ctx, `
+			SELECT
+				content
+			FROM topics_description
+			WHERE id = ?
+		`).Scan(&content); err != nil {
+			return nil, err
+		}
+
+		topics = append(topics, &pa.Topic{
+			ID:      id,
+			Content: content,
+		})
+	}
+
+	return topics, nil
+}
+
+func createTopicLink(ctx context.Context, tx *Tx, topicLink *pa.TopicLink) error {
+	if !pa.IsAdminContext(ctx) {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
+
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO projects_topics (
+			project_id,
+			topic_description_id
+		)
+		VALUES(?, ?)
+	`,
+		topicLink.ProjectID,
+		topicLink.TopicID,
+	)
+	return err
+}
+
+func deleteTopicLinkByProjectID(ctx context.Context, tx *Tx, projID int) error {
+	if !pa.IsAdminContext(ctx) {
+		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
+	}
+
+	_, err := tx.ExecContext(ctx, `DELETE FROM projects_topics WHERE project_id = ?`, projID)
+	return err
 }
 
 func attachTopicsToProject(ctx context.Context, tx *Tx, project *pa.Project) error {
+	topics, err := findTopicsByProjectID(ctx, tx, project.ID)
+	if err != nil {
+		return err
+	}
+
+	for _, topic := range topics { // attach the content for each.
+		project.Topics = append(project.Topics, topic.Content)
+	}
 	return nil
 }
