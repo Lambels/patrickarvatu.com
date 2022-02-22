@@ -2,6 +2,8 @@ package sqlite
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"strings"
 
 	pa "github.com/Lambels/patrickarvatu.com"
@@ -90,11 +92,6 @@ func (s *ProjectService) CreateOrUpdateProject(ctx context.Context, project *pa.
 	defer tx.Rollback()
 
 	proj, err := findProjectByName(ctx, tx, project.Name)
-
-	// make topics available to createProject and updateProject by attaching them.
-	if err := attachTopicsToProject(ctx, tx, proj); err != nil {
-		return err
-	}
 
 	switch pa.ErrorCode(err) {
 	case pa.ENOTFOUND: // (project doesent exist)
@@ -298,6 +295,9 @@ func updateProject(ctx context.Context, tx *Tx, id int, project *pa.Project) err
 	currentProject, err := findProjectByID(ctx, tx, id)
 	if err != nil {
 		return err
+
+	} else if err := attachTopicsToProject(ctx, tx, currentProject); err != nil {
+		return err
 	}
 
 	// delete all topic links.
@@ -344,7 +344,7 @@ func updateProject(ctx context.Context, tx *Tx, id int, project *pa.Project) err
 
 		// create link.
 		if err := createTopicLink(ctx, tx, &pa.TopicLink{
-			ProjectID: project.ID,
+			ProjectID: id,
 			TopicID:   topic.ID,
 		}); err != nil {
 			return err
@@ -418,7 +418,10 @@ func findTopicByContent(ctx context.Context, tx *Tx, content string) (*pa.Topic,
 		WHERE content = ?
 	`,
 		content,
-	).Scan(&topic); err != nil {
+	).Scan(&topic.ID, &topic.Content); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, pa.Errorf(pa.ENOTFOUND, "topic not found.")
+		}
 		return nil, err
 	}
 
@@ -466,7 +469,9 @@ func findTopicsByProjectID(ctx context.Context, tx *Tx, id int) ([]*pa.Topic, er
 				content
 			FROM topics_description
 			WHERE id = ?
-		`).Scan(&content); err != nil {
+		`,
+			id,
+		).Scan(&content); err != nil {
 			return nil, err
 		}
 
