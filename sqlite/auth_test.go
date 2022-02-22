@@ -11,7 +11,6 @@ import (
 )
 
 func TestCreateAuth(t *testing.T) {
-	t.Parallel() // run tests in parallel.
 	t.Run("Ok Create Call", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
@@ -132,7 +131,6 @@ func TestCreateAuth(t *testing.T) {
 }
 
 func TestDeleteAuth(t *testing.T) {
-	t.Parallel() // run tests in parallel.
 	t.Run("Ok Delete Call", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
@@ -224,7 +222,6 @@ func TestDeleteAuth(t *testing.T) {
 }
 
 func TestFindAuths(t *testing.T) {
-	t.Parallel()
 	t.Run("Ok Find Call", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)

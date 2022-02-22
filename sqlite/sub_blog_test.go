@@ -10,7 +10,6 @@ import (
 )
 
 func TestCreateSubBlog(t *testing.T) {
-	t.Parallel()
 	t.Run("Ok Create Call", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
@@ -107,7 +106,6 @@ func TestCreateSubBlog(t *testing.T) {
 }
 
 func TestDeleteSubBlog(t *testing.T) {
-	t.Parallel()
 	t.Run("Ok Delete Call", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
@@ -222,7 +220,6 @@ func TestDeleteSubBlog(t *testing.T) {
 }
 
 func TestUpdateSubBlog(t *testing.T) {
-	t.Parallel()
 	t.Run("Ok Update Call", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
@@ -352,7 +349,6 @@ func TestUpdateSubBlog(t *testing.T) {
 }
 
 func TestFindSubBlogs(t *testing.T) {
-	t.Parallel()
 	t.Run("Ok Find Call (filter - blogID)", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
