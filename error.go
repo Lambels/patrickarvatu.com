@@ -26,7 +26,7 @@ type Error struct {
 
 // Error is used to implement the error interface.
 func (e *Error) Error() string {
-	return fmt.Sprintf("wtf error: code=%s message=%s", e.Code, e.Message)
+	return fmt.Sprintf("patrickarvatu.com error: code=%s message=%s", e.Code, e.Message)
 }
 
 // ErrorCode is a helper function to retrieve the error code from a pa.Error.
