@@ -142,3 +142,8 @@ type getBlogsResponse struct {
 	N     int        `json:"n"`
 	Blogs []*pa.Blog `json:"blogs"`
 }
+
+type getProjectsResponse struct {
+	N        int           `json:"n"`
+	Projects []*pa.Project `json:"projects"`
+}
