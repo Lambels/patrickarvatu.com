@@ -106,6 +106,10 @@ func NewServer(conf *pa.Config) *Server {
 		s.registerSubscriptionRoutes(r)
 	})
 
+	s.router.Route("/v1/projects", func(r chi.Router) {
+		s.registerProjectRoutes(r)
+	})
+
 	// register router to server with registered routes.
 	s.server.Handler = s.router
 
