@@ -10,12 +10,13 @@ import (
 )
 
 // TODO: go with debugger in depth through each step to observe behaviour.
-// TODO: test all methods.
 
 func TestCreateOrUpdateProject(t *testing.T) {
 	t.Run("Ok Create or Update Call", func(t *testing.T) {
 		db := MustOpenTempDB(t)
 		defer MustCloseDB(t, db)
+
+		projectService := sqlite.NewProjectService(db)
 
 		backgroundCtx := context.Background()
 
@@ -26,8 +27,6 @@ func TestCreateOrUpdateProject(t *testing.T) {
 		} // no need to create user as CreateOrUpdateProject doesent check any keys.
 
 		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
-
-		projectService := sqlite.NewProjectService(db)
 
 		t.Run("step 1", func(t *testing.T) {
 			// current projects: []
@@ -135,6 +134,144 @@ func TestCreateOrUpdateProject(t *testing.T) {
 				t.Fatal("DeepEqual: projects[1] != pj2")
 			}
 		})
+	})
+
+	t.Run("Bad Create Or Update Call (Un Auth)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		projectService := sqlite.NewProjectService(db)
+
+		backgroundCtx := context.Background()
+
+		usrCtx := pa.NewContextWithUser(backgroundCtx, &pa.User{
+			Name:  "jhon DOE",
+			Email: "jhon@doe.com",
+		}) // no need to create user as CreateProject doesent check any keys.
+
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, &pa.User{
+			IsAdmin: true,
+		})
+
+		t.Run("Create", func(t *testing.T) {
+			project := &pa.Project{
+				Name:    "idk",
+				HtmlURL: "idk",
+			}
+
+			// create project (Un Auth).
+			if err := projectService.CreateOrUpdateProject(usrCtx, project); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
+				t.Fatal("expected UnAuth error")
+			} else if project.ID != 0 {
+				t.Fatal("got id != 0")
+			}
+		})
+
+		t.Run("Update", func(t *testing.T) {
+			project := &pa.Project{
+				Name:    "idk",
+				HtmlURL: "idk",
+			}
+
+			// create project.
+			MustCreateOrUpdateProject(t, db, adminUsrCtx, project)
+
+			// update project (Un Auth).
+			if err := projectService.CreateOrUpdateProject(usrCtx, project); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
+				t.Fatal("expected UnAuth error")
+			}
+		})
+	})
+}
+
+func TestDeleteProject(t *testing.T) {
+	t.Run("Ok Delete Call", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		projectService := sqlite.NewProjectService(db)
+
+		backgroundCtx := context.Background()
+
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, &pa.User{
+			IsAdmin: true,
+		})
+
+		project := &pa.Project{
+			Name:    "idk",
+			HtmlURL: "idk",
+		}
+
+		// create project.
+		MustCreateOrUpdateProject(t, db, adminUsrCtx, project)
+
+		// delete project.
+		if err := projectService.DeleteProject(adminUsrCtx, project.Name); err != nil {
+			t.Fatal(err)
+		}
+
+		// assert deletion.
+		if _, err := projectService.FindProjectByID(backgroundCtx, project.ID); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
+	})
+
+	t.Run("Bad Delete Call (Un Auth)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		projectService := sqlite.NewProjectService(db)
+
+		user := &pa.User{
+			Name:    "Jhon Doe",
+			Email:   "jhon@doe.com",
+			IsAdmin: true,
+		} // no need to create user as DeleteProject doesent check any keys.
+
+		user2 := &pa.User{
+			Name:  "Lambels",
+			Email: "Lamb@Lambels.com",
+		}
+
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
+		usr2Ctx := pa.NewContextWithUser(backgroundCtx, user2)
+
+		project := &pa.Project{
+			Name:    "idk",
+			HtmlURL: "idk",
+		}
+
+		// create project.
+		MustCreateOrUpdateProject(t, db, adminUsrCtx, project)
+
+		// delete project (Un Auth).
+		if err := projectService.DeleteProject(usr2Ctx, "idk"); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
+			t.Fatal("err != EUNAUTHORIZED")
+		}
+	})
+
+	t.Run("Bad Delete Call (Not Found)", func(t *testing.T) {
+		db := MustOpenTempDB(t)
+		defer MustCloseDB(t, db)
+
+		backgroundCtx := context.Background()
+
+		projectService := sqlite.NewProjectService(db)
+
+		user := &pa.User{
+			Name:    "Jhon Doe",
+			Email:   "jhon@doe.com",
+			IsAdmin: true,
+		} // no need to create user as DeleteProject doesent check any keys.
+
+		adminUsrCtx := pa.NewContextWithUser(backgroundCtx, user)
+
+		// delete project (Not Found).
+		if err := projectService.DeleteProject(adminUsrCtx, "fdsfsdv"); pa.ErrorCode(err) != pa.ENOTFOUND {
+			t.Fatal("err != ENOTFOUND")
+		}
 	})
 }
 
