@@ -180,7 +180,7 @@ func TestDeleteBlog(t *testing.T) {
 		// create blog.
 		MustCreateBlog(t, db, adminUsrCtx, blog)
 
-		// delete blog.
+		// delete blog (Un Auth).
 		if err := blogService.DeleteBlog(usr2Ctx, 1); pa.ErrorCode(err) != pa.EUNAUTHORIZED {
 			t.Fatal("err != EUNAUTHORIZED")
 		}
@@ -309,7 +309,7 @@ func TestUpdateBlog(t *testing.T) {
 			Description: NewStringPointer("Honestly worst blog ever"),
 		}
 
-		// update blog (Un Auth).
+		// update blog (Not Found).
 		if _, err := blogService.UpdateBlog(adminUsrCtx, 1, update); pa.ErrorCode(err) != pa.ENOTFOUND {
 			t.Fatal("err != ENOTFOUND")
 		}
