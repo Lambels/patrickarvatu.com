@@ -124,7 +124,7 @@ func findBlogSubscriptions(ctx context.Context, tx *Tx, filter pa.SubscriptionFi
 			blog_id,
 			COUNT(*) OVER()
 		FROM blog_subscriptions
-		WHERE`+strings.Join(where, " AND ")+`
+		WHERE `+strings.Join(where, " AND ")+`
 		ORDER BY id ASC
 		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
 	`,
@@ -196,7 +196,7 @@ func findSubBlogSubscriptions(ctx context.Context, tx *Tx, filter pa.Subscriptio
 			sub_blog_id,
 			COUNT(*) OVER()
 		FROM sub_blog_subscriptions
-		WHERE`+strings.Join(where, " AND ")+`
+		WHERE `+strings.Join(where, " AND ")+`
 		ORDER BY id ASC
 		`+FormatLimitOffset(filter.Limit, filter.Offset)+`
 	`,
@@ -283,7 +283,7 @@ func createBlogSubscription(ctx context.Context, tx *Tx, sub *pa.Subscription) e
 	result, err := tx.ExecContext(ctx, `
 		INSERT INTO blog_subscriptions (
 			user_id,
-			blog_id,
+			blog_id
 		)
 		VALUES(?, ?)
 	`,
@@ -312,7 +312,7 @@ func createSubBlogSubscription(ctx context.Context, tx *Tx, sub *pa.Subscription
 	result, err := tx.ExecContext(ctx, `
 		INSERT INTO sub_blog_subscriptions (
 			user_id,
-			sub_blog_id,
+			sub_blog_id
 		)
 		VALUES(?, ?)
 	`,
