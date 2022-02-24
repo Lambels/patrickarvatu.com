@@ -43,6 +43,7 @@ func newServer(cfg *pa.Config,
 	eventService *asynq.EventService,
 	subscriptionService pa.SubscriptionService,
 	emailService pa.EmailService,
+	projectService pa.ProjectService,
 ) (*http.Server, func(), error) {
 	s := http.NewServer(cfg)
 
@@ -54,6 +55,7 @@ func newServer(cfg *pa.Config,
 	s.EventService = eventService
 	s.SubscriptionService = subscriptionService
 	s.EmailService = emailService
+	s.ProjectService = projectService
 
 	s.EventService.RegisterSubscriptionsHandler(s.SubscriptionService)
 	s.EventService.RegisterHandler(pa.EventTopicNewComment, s.HandleCommentEvent)
@@ -99,6 +101,7 @@ func initializeServer(cfg *pa.Config) (*http.Server, func(), error) {
 	sbSrv := sqlite.NewSubBlogService(db)
 	cmSrv := sqlite.NewCommentService(db)
 	subSrv := sqlite.NewSubscriptionService(db)
+	pjSrv := sqlite.NewProjectService(db)
 	log.Println("[DEBUG] Started database services.")
 
 	serv, clnUpServ, err := newServer(
@@ -111,6 +114,7 @@ func initializeServer(cfg *pa.Config) (*http.Server, func(), error) {
 		evSrv,
 		subSrv,
 		emSrv,
+		pjSrv,
 	)
 	if err != nil {
 		clnUpDB()
