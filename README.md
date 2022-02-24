@@ -40,12 +40,12 @@ The config file uses the [toml](https://github.com/toml-lang/toml) formant.
 | :---        |    :----:   |          ---: |
 | client-id | Client ID of github oath 2.0 app | [github] |
 | client-secret | Client Secret of github oauth 2.0 app | [github] |
+| admin-user-email | the email of the admin, used to recognize admin user | [github]
 | addr | the address of the server (specify only port in development) | [http]
 | domain | the domain of the server (leave this empty in development) | [http]
 | block-key | key used for secure cookie encryption ([see more](https://github.com/gorilla/securecookie#examples)) | [http]
 | hash-key | key used for secure cookie encryption ([see more](https://github.com/gorilla/securecookie#examples)) | [http]
 | frontend-url | URL to frontend (ex: http://localhost:3000) | [http]
-| admin-user-email | the email of the admin, used to recognize admin user | [user]
 | sqlite-dsn | path to sqlite database | [database]
 | redis-dsn | redis data source name (ex: 127.0.0.1:6379) | [database]
 | addr | address of the smtp server | [smtp]
