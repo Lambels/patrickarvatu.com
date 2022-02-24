@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/mitchellh/go-homedir"
@@ -19,7 +19,7 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		log.Println("[Execute] err: ", err.Error())
 		os.Exit(1)
 	}
 }
@@ -43,7 +43,7 @@ func initConfig() {
 		// find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
-			fmt.Println(err)
+			log.Println("[homedir.Dir] err: ", err.Error())
 			os.Exit(1)
 		}
 
@@ -56,6 +56,6 @@ func initConfig() {
 
 	// if a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		log.Println("[INFO] Using config file:", viper.ConfigFileUsed())
 	}
 }
