@@ -125,9 +125,6 @@ func (s *Server) handleGithubCallback(w http.ResponseWriter, r *http.Request) {
 	var isAdmin bool
 	if user.Email != nil {
 		email = *user.Email
-		if email == s.conf.User.AdminUserEmail {
-			isAdmin = true
-		}
 	}
 
 	auth := &pa.Auth{
