@@ -130,7 +130,6 @@ func (s *Server) Open() error {
 		return err
 	}
 
-	log.Println("[INFO] running github repo job")
 	s.gtihubRepoJob()
 
 	// register github cron job.
@@ -315,6 +314,7 @@ func (s *Server) authentificateMiddleware(next http.Handler) http.Handler {
 			if user, err := s.UserService.FindUserByID(r.Context(), ses.UserID); err != nil {
 				log.Printf("FindUserByID: id=%v err=%s", ses.UserID, err)
 			} else { // user found, ok.
+				user.IsAdmin = user.Email == s.conf.Github.AdminUserEmail // try to set admin.
 				r = r.WithContext(pa.NewContextWithUser(r.Context(), user))
 			}
 		}
@@ -367,6 +367,7 @@ func (s *Server) requireNoAuthMiddleware(next http.Handler) http.Handler {
 // HandleCommentEvent handels the pa.EventTopicNewComment -> ./event.go.
 // sends an email to all subscribers.
 func (s *Server) HandleCommentEvent(ctx context.Context, hand pa.SubscriptionService, event pa.Event) error {
+	log.Println("[DEBUG] HandleCommentEvent is running.")
 	var payload pa.CommentPayload
 	if err := json.Unmarshal(event.Payload.([]byte), &payload); err != nil {
 		log.Println("[UnMarshalError] err: ", err.Error())
@@ -422,6 +423,7 @@ func (s *Server) HandleCommentEvent(ctx context.Context, hand pa.SubscriptionSer
 // HandleSubBlogtEvent handels the pa.EventTopicNewSubBlog -> ./event.go.
 // sends an email to all subscribers.
 func (s *Server) HandleSubBlogEvent(ctx context.Context, hand pa.SubscriptionService, event pa.Event) error {
+	log.Println("[DEBUG] HandleSubBlogEvent is running.")
 	var payload pa.SubBlogPayload
 	if err := json.Unmarshal(event.Payload.([]byte), &payload); err != nil {
 		log.Println("[UnMarshalError] err: ", err.Error())
@@ -478,6 +480,7 @@ func (s *Server) HandleSubBlogEvent(ctx context.Context, hand pa.SubscriptionSer
 
 // gtihubRepoJob represents an hourly job to sync system project state with github project state.
 func (s *Server) gtihubRepoJob() {
+	log.Println("[INFO] Running github repo job.")
 	adminCtx := pa.NewContextWithUser(context.Background(), &pa.User{IsAdmin: true})
 
 	// get current projects.
