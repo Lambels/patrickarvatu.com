@@ -7,7 +7,7 @@ function Project({ project }) {
         <p className="font-normal text-gray-700 dark:text-gray-400">{project.description}</p>
       </div>
       <div className="p-3 pb-4">
-        {project.topics.map((obj, i) => {
+        {project.topics?.map((obj, i) => {
           return (
             <span key={i} className="inline-block p1 pl-2 pr-2 mr-2 rounded-xl bg-gray-700 border-gray-600 border text-white font-semibold">{"#"+obj}</span>
           )
