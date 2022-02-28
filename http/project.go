@@ -11,6 +11,9 @@ import (
 
 // registerProjectRoutes registers the project routes under r.
 func (s *Server) registerProjectRoutes(r chi.Router) {
+	fs := http.FileServer(http.Dir("/images/rpojects/"))
+	r.Handle("/images/", http.StripPrefix("/images", fs))
+
 	r.Get("/", s.handleGetProjects)
 	r.Get("/{projectIDOrName}", s.handleGetProject)
 

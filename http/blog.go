@@ -11,6 +11,9 @@ import (
 
 // registerBlogRoutes registers the blog routes under r.
 func (s *Server) registerBlogRoutes(r chi.Router) {
+	fs := http.FileServer(http.Dir("/images/blogs/"))
+	r.Handle("/images/", http.StripPrefix("/images", fs))
+
 	r.Get("/", s.handleGetBlogs)
 	r.Get("/{blogID}", s.handleGetBlog)
 	r.Get("/{blogID}/sub-blogs", s.handleGetSubBlogs)
