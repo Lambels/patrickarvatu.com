@@ -50,6 +50,8 @@ type Server struct {
 	SubscriptionService pa.SubscriptionService
 	EmailService        pa.EmailService
 	ProjectService      pa.ProjectService
+	ProjectsFileSystem  pa.FileService
+	BlogsFileSystem     pa.FileService
 
 	conf *pa.Config
 }
