@@ -5,6 +5,7 @@ import (
 
 	pa "github.com/Lambels/patrickarvatu.com"
 	"github.com/Lambels/patrickarvatu.com/asynq"
+	"github.com/Lambels/patrickarvatu.com/fs"
 	"github.com/Lambels/patrickarvatu.com/http"
 	"github.com/Lambels/patrickarvatu.com/smtp"
 	"github.com/Lambels/patrickarvatu.com/sqlite"
@@ -34,6 +35,10 @@ func newEmailService(cfg *pa.Config) pa.EmailService {
 	return smtp.NewEmailService(cfg.Smtp.Addr, cfg.Smtp.Identity, cfg.Smtp.Username, cfg.Smtp.Password, cfg.Smtp.Host)
 }
 
+func newFileService(root string) pa.FileService {
+	return fs.NewImageService(root)
+}
+
 func newServer(cfg *pa.Config,
 	authService pa.AuthService,
 	userService pa.UserService,
@@ -44,6 +49,8 @@ func newServer(cfg *pa.Config,
 	subscriptionService pa.SubscriptionService,
 	emailService pa.EmailService,
 	projectService pa.ProjectService,
+	projectsFileSystem pa.FileService,
+	blogsFileSystem pa.FileService,
 ) (*http.Server, func(), error) {
 	s := http.NewServer(cfg)
 
@@ -56,6 +63,8 @@ func newServer(cfg *pa.Config,
 	s.SubscriptionService = subscriptionService
 	s.EmailService = emailService
 	s.ProjectService = projectService
+	s.ProjectsFileSystem = projectsFileSystem
+	s.BlogsFileSystem = blogsFileSystem
 
 	s.EventService.RegisterSubscriptionsHandler(s.SubscriptionService)
 	s.EventService.RegisterHandler(pa.EventTopicNewComment, s.HandleCommentEvent)
@@ -95,6 +104,12 @@ func initializeServer(cfg *pa.Config) (*http.Server, func(), error) {
 	emSrv := newEmailService(cfg)
 	log.Println("[DEBUG] Initialized email service.")
 
+	prFs := newFileService("/images/projects")
+	log.Println("[DEBUG] Initialized projects images file system.")
+
+	blFs := newFileService("/images/blogs")
+	log.Println("[DEBUG] Initialized blogs images file system.")
+
 	auSrv := sqlite.NewAuthService(db)
 	usSrv := sqlite.NewUserService(db)
 	blSrv := sqlite.NewBlogService(db)
@@ -115,6 +130,8 @@ func initializeServer(cfg *pa.Config) (*http.Server, func(), error) {
 		subSrv,
 		emSrv,
 		pjSrv,
+		prFs,
+		blFs,
 	)
 	if err != nil {
 		clnUpDB()
