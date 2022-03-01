@@ -16,7 +16,8 @@ type FileService struct {
 	root string
 }
 
-func NewImageService(root string) *FileService {
+// NewFileService returns a new FileService with root path set to root.
+func NewFileService(root string) *FileService {
 	os.MkdirAll(root, 0755)
 
 	return &FileService{
@@ -24,13 +25,15 @@ func NewImageService(root string) *FileService {
 	}
 }
 
+// CreateFile creates a new path ending with the file ie: "/bar/baz/file.txt" will create
+// a file bar with children baz if they dont exist and a file.txt in baz.
 func (s *FileService) CreateFile(ctx context.Context, path string, content io.Reader) error {
 	if !pa.IsAdminContext(ctx) {
 		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
 	}
 
 	// cut trailing "/" and splice the path on "/".
-	splicedPath := strings.Split(strings.TrimLeft(string(filepath.Separator), path), string(filepath.Separator))
+	splicedPath := strings.Split(strings.TrimLeft(path, string(filepath.Separator)), string(filepath.Separator))
 
 	// we want to ensure the path leading to the file exists before opening it.
 	if len(splicedPath) > 1 {
@@ -58,23 +61,25 @@ func (s *FileService) CreateFile(ctx context.Context, path string, content io.Re
 	return err
 }
 
+// DeleteFile deletes the file path in the file system.
+// returns ENOTFOUND if file isnt found.
 func (s *FileService) DeleteFile(ctx context.Context, path string) error {
 	if !pa.IsAdminContext(ctx) {
 		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
 	}
 
 	// remove file.
-	if err := os.Remove(path); err != nil {
+	if err := os.Remove(filepath.Join(s.root, path)); err != nil {
 		// parse error.
 		if os.IsNotExist(err) {
-			return pa.Errorf(pa.ENOTFOUND, "file doesent exist")
+			return pa.Errorf(pa.ENOTFOUND, "file doesent exist.")
 		}
 		return err
 	}
 	return nil
 }
 
-// TODO: Implement.
 func pathExists(path string) bool {
-
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
 }
