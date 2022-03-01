@@ -36,7 +36,7 @@ func newEmailService(cfg *pa.Config) pa.EmailService {
 }
 
 func newFileService(root string) pa.FileService {
-	return fs.NewImageService(root)
+	return fs.NewFileService(root)
 }
 
 func newServer(cfg *pa.Config,
