@@ -25,7 +25,10 @@ func (s *Server) registerBlogRoutes(r chi.Router) {
 
 		r.Patch("/{blogID}", s.handleUpdateBlog)
 
+		r.Put("/{blogID}/image", s.handleAttachBlogImage)
+
 		r.Delete("/{blogID}", s.handleDeleteBlog)
+		r.Delete("/{blogID}/image", s.handleDeleteBlogImage)
 	})
 }
 
@@ -150,4 +153,12 @@ func (s *Server) handleDeleteBlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleAttachBlogImage(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (s *Server) handleDeleteBlogImage(w http.ResponseWriter, r *http.Request) {
+
 }

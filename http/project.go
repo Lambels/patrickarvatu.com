@@ -11,7 +11,7 @@ import (
 
 // registerProjectRoutes registers the project routes under r.
 func (s *Server) registerProjectRoutes(r chi.Router) {
-	fs := http.FileServer(http.Dir("/images/rpojects/"))
+	fs := http.FileServer(http.Dir("/images/projects/"))
 	r.Handle("/images/", http.StripPrefix("/images", fs))
 
 	r.Get("/", s.handleGetProjects)
@@ -22,7 +22,10 @@ func (s *Server) registerProjectRoutes(r chi.Router) {
 
 		r.Post("/", s.handleCreateOrUpdateProject)
 
-		r.Delete("/{projectName}", s.handleDeleteProject)
+		r.Put("/{projectName}/image", s.handleAttachProjectImage)
+
+		r.Delete("/{projectID}", s.handleDeleteProject)
+		r.Delete("/{projectID}/image", s.handleDeleteProjectImage)
 	})
 }
 
@@ -124,4 +127,12 @@ func (s *Server) handleDeleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleAttachProjectImage(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (s *Server) handleDeleteProjectImage(w http.ResponseWriter, r *http.Request) {
+
 }
