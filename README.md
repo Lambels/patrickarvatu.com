@@ -53,8 +53,13 @@ The config file uses the [toml](https://github.com/toml-lang/toml) formant.
 | username | refer: [godoc](https://pkg.go.dev/net/smtp#PlainAuth) | [smtp]
 | password | refer: [godoc](https://pkg.go.dev/net/smtp#PlainAuth) | [smtp]
 | host | refer: [godoc](https://pkg.go.dev/net/smtp#PlainAuth) | [smtp]
+| blog-images-dir | path to the http served file structure for blogs (used to store images) | [file-structure]
+| project-images-dir | path to the http served file structure for projects (used to store images) | [file-structure]
+
 
 # Run:
+**GO 1.16 or higher is required**
+
 Currently the app isnt dockerized but you can run the go backend using go command line tool.
 ```
 go install github.com/Lambels/patrickarvatu.com/cmd
