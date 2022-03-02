@@ -104,10 +104,10 @@ func initializeServer(cfg *pa.Config) (*http.Server, func(), error) {
 	emSrv := newEmailService(cfg)
 	log.Println("[DEBUG] Initialized email service.")
 
-	prFs := newFileService("/images/projects")
+	prFs := newFileService(cfg.FileStructure.ProjectImagesDir)
 	log.Println("[DEBUG] Initialized projects images file system.")
 
-	blFs := newFileService("/images/blogs")
+	blFs := newFileService(cfg.FileStructure.BlogImagesDir)
 	log.Println("[DEBUG] Initialized blogs images file system.")
 
 	auSrv := sqlite.NewAuthService(db)
