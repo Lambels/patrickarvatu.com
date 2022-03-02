@@ -2,6 +2,8 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
+	"mime"
 	"net/http"
 	"strconv"
 
@@ -11,7 +13,7 @@ import (
 
 // registerProjectRoutes registers the project routes under r.
 func (s *Server) registerProjectRoutes(r chi.Router) {
-	fs := http.FileServer(http.Dir("/images/projects/"))
+	fs := http.FileServer(http.Dir(s.conf.FileStructure.ProjectImagesDir))
 	r.Handle("/images/", http.StripPrefix("/images", fs))
 
 	r.Get("/", s.handleGetProjects)
@@ -130,9 +132,40 @@ func (s *Server) handleDeleteProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAttachProjectImage(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "projectID"))
+	if err != nil {
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid id format"))
+		return
+	}
 
+	if _, err := s.ProjectService.FindProjectByID(r.Context(), id); err != nil { // cant attach image to un unexisting project.
+		SendError(w, r, err)
+		return
+	} else if ext, err := mime.ExtensionsByType(r.Header.Get("Content-Type")); err != nil {
+		SendError(w, r, err)
+		return
+	} else if len(ext) == 0 {
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid mime type"))
+		return
+	} else if err := s.ProjectsFileSystem.CreateFile(r.Context(), "/"+fmt.Sprint(id)+ext[0], r.Body); err != nil {
+		SendError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (s *Server) handleDeleteProjectImage(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "projectID")
 
+	if ext, err := mime.ExtensionsByType(r.Header.Get("Content-Type")); err != nil {
+		SendError(w, r, err)
+		return
+	} else if len(ext) == 0 {
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid mime type"))
+		return
+	} else if err := s.ProjectsFileSystem.DeleteFile(r.Context(), "/"+string(id)+ext[0]); err != nil {
+		SendError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

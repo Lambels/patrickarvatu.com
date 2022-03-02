@@ -2,6 +2,8 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
+	"mime"
 	"net/http"
 	"strconv"
 
@@ -11,7 +13,7 @@ import (
 
 // registerBlogRoutes registers the blog routes under r.
 func (s *Server) registerBlogRoutes(r chi.Router) {
-	fs := http.FileServer(http.Dir("/images/blogs/"))
+	fs := http.FileServer(http.Dir(s.conf.FileStructure.BlogImagesDir))
 	r.Handle("/images/", http.StripPrefix("/images", fs))
 
 	r.Get("/", s.handleGetBlogs)
@@ -156,9 +158,40 @@ func (s *Server) handleDeleteBlog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAttachBlogImage(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "blogID"))
+	if err != nil {
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid id format"))
+		return
+	}
 
+	if _, err := s.BlogService.FindBlogByID(r.Context(), id); err != nil { // cant attach image to un unexisting blog.
+		SendError(w, r, err)
+		return
+	} else if ext, err := mime.ExtensionsByType(r.Header.Get("Content-Type")); err != nil {
+		SendError(w, r, err)
+		return
+	} else if len(ext) == 0 {
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid mime type"))
+		return
+	} else if err := s.BlogsFileSystem.CreateFile(r.Context(), "/"+fmt.Sprint(id)+ext[0], r.Body); err != nil {
+		SendError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (s *Server) handleDeleteBlogImage(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "blogID")
 
+	if ext, err := mime.ExtensionsByType(r.Header.Get("Content-Type")); err != nil {
+		SendError(w, r, err)
+		return
+	} else if len(ext) == 0 {
+		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid mime type"))
+		return
+	} else if err := s.BlogsFileSystem.DeleteFile(r.Context(), "/"+string(id)+ext[0]); err != nil {
+		SendError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
