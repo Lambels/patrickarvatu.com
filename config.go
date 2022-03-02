@@ -27,4 +27,9 @@ type Config struct {
 		Password string `mapstructure:"password"`
 		Host     string `mapstructure:"host"`
 	} `mapstructure:"smtp"`
+
+	FileStructure struct {
+		ProjectImagesDir string `mapstructure:"project-images-dir"`
+		BlogImagesDir    string `mapstructure:"blog-images-dir"`
+	} `mapstructure:"file-structure"`
 }
