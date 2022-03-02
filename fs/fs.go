@@ -26,7 +26,7 @@ func NewFileService(root string) *FileService {
 }
 
 // CreateFile creates a new path ending with the file ie: "/bar/baz/file.txt" will create
-// a file bar with children baz if they dont exist and a file.txt in baz.
+// a dir bar with children baz if they dont exist, and a file.txt in baz.
 func (s *FileService) CreateFile(ctx context.Context, path string, content io.Reader) error {
 	if !pa.IsAdminContext(ctx) {
 		return pa.Errorf(pa.EUNAUTHORIZED, "user isnt admin.")
