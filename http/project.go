@@ -13,9 +13,6 @@ import (
 
 // registerProjectRoutes registers the project routes under r.
 func (s *Server) registerProjectRoutes(r chi.Router) {
-	fs := http.FileServer(http.Dir(s.conf.FileStructure.ProjectImagesDir))
-	r.Handle("/images/", http.StripPrefix("/images", fs))
-
 	r.Get("/", s.handleGetProjects)
 	r.Get("/{projectIDOrName}", s.handleGetProject)
 
@@ -24,7 +21,7 @@ func (s *Server) registerProjectRoutes(r chi.Router) {
 
 		r.Post("/", s.handleCreateOrUpdateProject)
 
-		r.Put("/{projectName}/image", s.handleAttachProjectImage)
+		r.Put("/{projectID}/image", s.handleAttachProjectImage)
 
 		r.Delete("/{projectID}", s.handleDeleteProject)
 		r.Delete("/{projectID}/image", s.handleDeleteProjectImage)
@@ -163,7 +160,7 @@ func (s *Server) handleDeleteProjectImage(w http.ResponseWriter, r *http.Request
 	} else if len(ext) == 0 {
 		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid mime type"))
 		return
-	} else if err := s.ProjectsFileSystem.DeleteFile(r.Context(), "/"+string(id)+ext[0]); err != nil {
+	} else if err := s.ProjectsFileSystem.DeleteFile(r.Context(), "/"+id+ext[0]); err != nil {
 		SendError(w, r, err)
 		return
 	}

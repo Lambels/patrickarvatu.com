@@ -81,6 +81,10 @@ func NewServer(conf *pa.Config) *Server {
 	// set custom not found api handler.
 	s.router.NotFound(s.handleNotFound)
 
+	// register file servers.
+	imagesDir := http.Dir("./images")
+	s.registerFileServer(s.router, "/v1/images", imagesDir)
+
 	s.router.Route("/v1/oauth", func(r chi.Router) {
 		s.registerAuthRoutes(r)
 	})
@@ -301,9 +305,11 @@ func (s *Server) authentificateMiddleware(next http.Handler) http.Handler {
 				return
 			} else if len(users) == 0 {
 				SendError(w, r, pa.Errorf(pa.EUNAUTHORIZED, "api key invalid"))
+				return
 			}
 
 			// set auth user to ctx and dispatch next handler.
+			users[0].IsAdmin = users[0].Email == s.conf.Github.AdminUserEmail // try to set admin.
 			r = r.WithContext(pa.NewContextWithUser(r.Context(), users[0]))
 			next.ServeHTTP(w, r)
 			return
@@ -568,4 +574,20 @@ func (s *Server) getRepos() ([]*pa.Project, error) {
 	}
 
 	return projects, nil
+}
+
+// https://github.com/go-chi/chi/blob/master/_examples/fileserver/main.go
+func (s *Server) registerFileServer(r chi.Router, path string, root http.FileSystem) {
+	if strings.ContainsAny(path, "{}*") {
+		panic("[Error] FileServer path does not allow any url params")
+	}
+
+	path += "/*"
+
+	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		rctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
+		fs.ServeHTTP(w, r)
+	})
 }

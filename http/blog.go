@@ -13,9 +13,6 @@ import (
 
 // registerBlogRoutes registers the blog routes under r.
 func (s *Server) registerBlogRoutes(r chi.Router) {
-	fs := http.FileServer(http.Dir(s.conf.FileStructure.BlogImagesDir))
-	r.Handle("/images/", http.StripPrefix("/images", fs))
-
 	r.Get("/", s.handleGetBlogs)
 	r.Get("/{blogID}", s.handleGetBlog)
 	r.Get("/{blogID}/sub-blogs", s.handleGetSubBlogs)
@@ -157,6 +154,8 @@ func (s *Server) handleDeleteBlog(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// handleAttachBlogImage handels PUT '/blogs/{blogID}/image'
+// creates a new image from the request body named after the blog id.
 func (s *Server) handleAttachBlogImage(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "blogID"))
 	if err != nil {
@@ -180,6 +179,8 @@ func (s *Server) handleAttachBlogImage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+// handleDeleteBlogImage handels DELETE '/blogs/{blogID}/image'
+// deletes the image with name: id and extension: Content-Type.
 func (s *Server) handleDeleteBlogImage(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "blogID")
 
@@ -189,7 +190,7 @@ func (s *Server) handleDeleteBlogImage(w http.ResponseWriter, r *http.Request) {
 	} else if len(ext) == 0 {
 		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid mime type"))
 		return
-	} else if err := s.BlogsFileSystem.DeleteFile(r.Context(), "/"+string(id)+ext[0]); err != nil {
+	} else if err := s.BlogsFileSystem.DeleteFile(r.Context(), "/"+id+ext[0]); err != nil {
 		SendError(w, r, err)
 		return
 	}
