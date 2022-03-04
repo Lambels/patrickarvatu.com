@@ -19,7 +19,7 @@ const bgLookup = {
   },
   4: {
     bg: "bg-[url('/waves4.svg')]",
-  }
+  },
 };
 
 function Application({ Component, pageProps }) {
