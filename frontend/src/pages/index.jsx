@@ -64,8 +64,8 @@ function Home({ showModalParam }) {
                   Day to day life
                 </h5>
                 <p className="font-normal text-gray-700 dark:text-gray-400">
-                  Im a busy guy, I play hockey professionally and aim to keep
-                  my grades up, when Im not coding im either playing sports or
+                  Im a busy guy, I play hockey professionally and aim to keep my
+                  grades up, when Im not coding im either playing sports or
                   studying. I also love reading when I have time ;)
                 </p>
               </div>
