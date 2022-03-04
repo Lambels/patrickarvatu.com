@@ -7,8 +7,8 @@ function Projects({ data }) {
     <>
       <NextSeo title="Projects" />
       <ProjectLayout>
-        {data.projects.map((obj, i) => {
-          return <Project project={obj} key={i}/>;
+        {data.projects?.map((obj, i) => {
+          return <Project project={obj} key={i} />;
         })}
       </ProjectLayout>
     </>
@@ -16,7 +16,9 @@ function Projects({ data }) {
 }
 
 export async function getServerSideProps() {
-  const response = await fetch("http://localhost:8080/v1/projects");
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/v1/projects`
+  );
 
   const data = await response.json();
   return { props: { data } };
