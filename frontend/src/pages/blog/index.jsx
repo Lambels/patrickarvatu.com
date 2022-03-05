@@ -10,9 +10,9 @@ function Index({ blogData }) {
   if (isAdmin) {
     return (
       <>
-        <NextSeo title="blogs" />
+        <NextSeo title="Blogs" />
         <BlogsPreviewLayout>
-          {data.blogs?.map((obj, i) => {
+          {blogData.blogs?.map((obj, i) => {
             return <AdminBlogPreview blog={obj} key={i} />;
           })}
         </BlogsPreviewLayout>
@@ -21,7 +21,7 @@ function Index({ blogData }) {
   } else {
     return (
       <>
-        <NextSeo title="blogs" />
+        <NextSeo title="Blogs" />
         <BlogsPreviewLayout>
           {blogData.blogs?.map((obj, i) => {
               return <BlogPreview blog={obj} key={i} />;
