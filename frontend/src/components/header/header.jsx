@@ -8,7 +8,7 @@ import ProfileCard from "../profile-card";
 
 function Header() {
   const router = useRouter();
-  const { isAuth, data } = useAuth();
+  const { isAuth, user, pfpUrl } = useAuth();
   const [profileModalIsOpen, setProfileModalIsOpen] = useState(false);
 
   const handleClickProfile = () => {
@@ -37,7 +37,7 @@ function Header() {
             >
               <img
                 className="w-8 h-8 rounded-full"
-                src={isAuth ? data.pfpUrl : "/image/blank-user.png"}
+                src={isAuth ? pfpUrl : "/image/blank-user.png"}
                 alt="user photo"
               />
             </button>
@@ -133,7 +133,7 @@ function Header() {
         </div>
       </nav>
       {profileModalIsOpen && !isAuth && <LoginModal />}
-      {profileModalIsOpen && isAuth && <ProfileCard user={data.user} pfpUrl={data.pfpUrl} />}
+      {profileModalIsOpen && isAuth && <ProfileCard user={user} pfpUrl={pfpUrl} />}
       {profileModalIsOpen && <Backdrop onClick={handleClickBackdrop} />}
     </>
   );
