@@ -1,6 +1,6 @@
 function BlogPreview({ blog }) {
   return (
-    <a href={`/blog/${blog.title}`}>
+    <a href={`/blog/${blog.id}`}>
       <div className="flex justify-center">
         <div className="flex flex-col lg:min-w-[60rem] lg:min-h-[20rem] md:flex-row md:max-w-xl rounded-lg shadow-lg hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
           <img
