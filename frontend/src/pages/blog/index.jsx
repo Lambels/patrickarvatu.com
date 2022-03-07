@@ -1,6 +1,6 @@
 import { NextSeo } from "next-seo";
-import AdminBlogPreview from "../../components/admin-blog-preview/admin-blog-preview";
-import BlogPreview from "../../components/blog-preview/blog-preview";
+import AdminBlogPreview from "../../components/admin-blog-preview";
+import BlogPreview from "../../components/blog-preview";
 import BlogsPreviewLayout from "../../components/blogs-preview-layout";
 import { useAuth } from "../../store/auth-context";
 
