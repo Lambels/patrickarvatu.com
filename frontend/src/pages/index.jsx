@@ -8,7 +8,7 @@ import { useAuth } from "../store/auth-context";
 
 function Home({ showModalParam }) {
   const [showModal, setShowModal] = useState(false);
-  const { isAuth, data } = useAuth();
+  const { isAuth, user, pfpUrl } = useAuth();
 
   const handleClickBackdrop = () => {
     setShowModal(false);
@@ -99,7 +99,7 @@ function Home({ showModalParam }) {
       </div>
       {showModal && !isAuth && <LoginModal />}
       {showModal && isAuth && (
-        <ProfileCard user={data.user} pfpUrl={data.pfpUrl} />
+        <ProfileCard user={user} pfpUrl={pfpUrl} />
       )}
       {showModal && <Backdrop onClick={handleClickBackdrop} />}
     </>
