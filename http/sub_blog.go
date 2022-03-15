@@ -2,8 +2,10 @@ package http
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	pa "github.com/Lambels/patrickarvatu.com"
 	"github.com/go-chi/chi/v5"
@@ -101,9 +103,46 @@ func (s *Server) handleGetSubBlog(w http.ResponseWriter, r *http.Request) {
 // creates a sub blog with the request body and pushes a pa.EventTopicNewSubBlog -> ./event.go.
 func (s *Server) handleCreateSubBlog(w http.ResponseWriter, r *http.Request) {
 	var subBlog pa.SubBlog
-	// decode body.
-	if err := json.NewDecoder(r.Body).Decode(&subBlog); err != nil {
-		SendError(w, r, pa.Errorf(pa.EINVALID, "invalid JSON body"))
+
+	switch header := r.Header.Get("Content-Type"); {
+	case header == "application/json":
+		// decode body.
+		if err := json.NewDecoder(r.Body).Decode(&subBlog); err != nil {
+			SendError(w, r, pa.Errorf(pa.EINVALID, "invalid JSON body"))
+			return
+		}
+
+	case strings.HasPrefix(header, "multipart/form-data"):
+		if err := r.ParseMultipartForm(32 << 20); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		blogID, err := strconv.Atoi(r.FormValue("blogID"))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		subBlog.BlogID = blogID
+		subBlog.Title = r.FormValue("title")
+
+		f, _, err := r.FormFile("content")
+		if err != nil {
+			SendError(w, r, err)
+			return
+		}
+
+		buf, err := ioutil.ReadAll(f)
+		if err != nil {
+			SendError(w, r, err)
+			return
+		}
+
+		subBlog.Content = string(buf)
+
+	default:
+		w.WriteHeader(http.StatusUnsupportedMediaType)
 		return
 	}
 
