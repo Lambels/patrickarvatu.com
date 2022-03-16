@@ -1,6 +1,9 @@
 import classNames from "classnames";
+import { useRouter } from "next/router";
 
 function AppLayout({ children, bgConf }) {
+  const router = useRouter()
+
   return (
     <div
       className={classNames({
@@ -8,7 +11,8 @@ function AppLayout({ children, bgConf }) {
         "bg-cover": true,
         "bg-no-repeat": true,
         "bg-center": true,
-        [bgConf.bg]: true,
+        "bg-gray-900": true,
+        [bgConf.bg]: router.query.id === undefined,
       })}
       id="main"
     >
