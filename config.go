@@ -1,5 +1,7 @@
 package pa
 
+// Config layouts the .toml config file structure its expecting.
+// uses mapstructure tags which is used by viper.
 type Config struct {
 	Github struct {
 		ClientID       string `mapstructure:"client-id"`

@@ -11,7 +11,9 @@ const SessionCookieName = "session"
 
 // Session represents data stored per session under a secure cookie.
 type Session struct {
-	UserID  int    `json:"userID"`
-	IsAdmin bool   `json:"isAdmin"`
-	State   string `json:"state"`
+	UserID  int  `json:"userID"`
+	IsAdmin bool `json:"isAdmin"`
+	// Mainly used for auth 2.0 protocol dialogue to prevent CSRF attacks.
+	// can also be used to store redirect urls and any other state type variables.
+	State string `json:"state"`
 }
